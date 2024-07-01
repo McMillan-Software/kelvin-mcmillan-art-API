@@ -11,12 +11,14 @@ class Painting(Base):
     title = Column(String(256), unique=True)
     location = Column(String(256))
     type = Column(String, nullable=False)
-    dimensions = Column(String, nullable=False)
+    width = Column(Integer, nullable=False)
+    height = Column(Integer, nullable=False)
     sold = Column(Boolean, nullable=False)
     framed = Column(Boolean, default=False)
     giclee = Column(Boolean, default=False)
     price = Column(Float)
     info = Column(String)
+    aspect_ratio = Column(String, nullable=True)
     galleryName = Column(String, nullable=True)
     galleryLink = Column(String, nullable=True)
 
@@ -42,26 +44,26 @@ class PageItem(Base):
 
 class Giclee(Base):
     __tablename__ = 'giclees'
-    id = Column(Integer, primary_key=True)
+    painting_id = Column(Integer, ForeignKey('paintings.id'), primary_key = True)
     page_order = Column(Integer)
-    painting_id = Column(Integer, ForeignKey('paintings.id'))
+
 
     # Giclee <-- Painting, 1:1 
     giclee_parent_painting = relationship ("Painting", back_populates="child_giclee", uselist=False)
 
     # Giclee --> GicleeOption, 1:N
-    children_options = relationship("GicleeOption", back_populates="parent_giclee")
+    children_options = relationship("GicleeOption", back_populates="parent_giclee_painting")
 
 
 
 class GicleeOption(Base):
-    __tablename__ = 'giclee_option'
+    __tablename__ = 'giclee_options'
     id = Column(Integer, primary_key=True)
-    gicleeId = Column(Integer, ForeignKey('giclees.id'))
+    painting_id = Column(Integer, ForeignKey('giclees.painting_id'))
     option_attribute_id = Column(Integer, ForeignKey("giclee_option_attributes.id"))
     
     # GicleeOption <-- Giclee, N:1 
-    parent_giclee = relationship("Giclee", back_populates="children_options")
+    parent_giclee_painting = relationship("Giclee", back_populates="children_options")
 
     # GicleeOption <-- GicleeOptionAttributes, N:1 
     parent_attributes = relationship("GicleeOptionAttributes", back_populates="children_options")
@@ -71,7 +73,9 @@ class GicleeOption(Base):
 class GicleeOptionAttributes(Base):
     __tablename__='giclee_option_attributes'
     id = Column(Integer, primary_key=True)
-    dimensions=Column(String)
+    width = Column(Integer)
+    height = Column(Integer)
+    aspect_ratio = Column(String)
     price = Column(Integer)
 
     # GicleeOptionAttributes --> GicleeOption, 1:N
