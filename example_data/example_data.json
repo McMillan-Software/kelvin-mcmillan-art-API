@@ -1,88 +1,97 @@
 [
-    {
-      "title": "Lindus Folds",
-      "type": "Watercolour",
-      "dimensions": "1080 x 740mm",
-      "sold": false,
-      "giclee": true,
-      "price": 8500,
-      "info": "",
-      "galleryLink" : "www.louvre.co.fr",
-      "galleryName" : "The Louvre",
-      "pages" : ["home", "landscapes"]
-    },
-    {
-      "title": "Winter light, Lake Wanaka",
-      "type": "Watercolour",
-      "dimensions": "1090 x 360mm",
-      "sold": false,
-      "giclee": true,
-      "price": 4500,
-      "info": "",
-      "galleryLink" : "www.aic.com",
-      "galleryName" : "The Art Institute of Chicago",
-      "pages" : ["home", "landscapes"]
-    },
-    {
-      "title": "Big Sky Tekapo",
-      "type": "Watercolour",
-      "dimensions": "1080 x 750mm",
-      "sold": true,
-      "giclee": false,
-      "price": 0,
-      "info": "",
-      "galleryLink" : null,
-      "galleryName" : null,
-      "pages" : ["home", "landscapes"]
-    },
-    {
-      "title": "Nonsense",
-      "type": "Watercolour",
-      "dimensions": "1234455677",
-      "sold": true,
-      "giclee": false,
-      "price": 0,
-      "info": ""
-    },
-    {
-      "title": "Children's Bay Akaroa",
-      "type": "Watercolour",
-      "dimensions": "380 x 560mm",
-      "sold": false,
-      "giclee": false,
-      "price": 2500,
-      "info": "",
-      "pages" : ["marine"]
-    },
-    {
-      "title": "Autumn Light",
-      "type": "Watercolour",
-      "dimensions": "1090x360mm",
-      "sold": false,
-      "giclee": false,
-      "price": 4500,
-      "info": "",
-      "pages" : ["marine"]
-    },
-    {
-      "title": "Deep Pockets, Coalgate Sale Yards",
-      "type": "Watercolour",
-      "dimensions": "1020 x 380mm",
-      "sold": false,
-      "giclee": false,
-      "price": 4500,
-      "info": "",
-      "pages" : ["home", "rural"]
-    },
-    {
-      "title": "Haystacks, Yaldhurst",
-      "type": "Watercolour",
-      "dimensions": "560 x 380mm",
-      "sold": true,
-      "giclee": false,
-      "price": 2500,
-      "info": "",
-      "pages" : ["rural"]
-    }
-  ]
-    
+  {
+    "title": "Lindus Folds",
+    "type": "Watercolour",
+    "width": 1080,
+    "height": 740,
+    "sold": false,
+    "giclee": true,
+    "price": 8500,
+    "info": "",
+    "aspect_ratio" : "3:2",
+    "galleryLink" : "www.louvre.co.fr",
+    "galleryName" : "The Louvre",
+    "pages" : ["home", "landscapes"]
+  },
+  {
+    "title": "Winter light, Lake Wanaka",
+    "type": "Watercolour",
+    "width": 1090,
+    "height": 360,
+    "sold": false,
+    "giclee": true,
+    "price": 4500,
+    "info": "",
+    "galleryLink" : "www.aic.com",
+    "galleryName" : "The Art Institute of Chicago",
+    "pages" : ["home", "landscapes"]
+  },
+  {
+    "title": "Big Sky Tekapo",
+    "type": "Watercolour",
+    "width": 1080,
+    "height": 750,
+    "sold": true,
+    "giclee": false,
+    "price": 0,
+    "info": "",
+    "aspect_ratio" : "3:1",
+    "galleryLink" : null,
+    "galleryName" : null,
+    "pages" : ["home", "landscapes"]
+  },
+  {
+    "title": "Nonsense",
+    "type": "Watercolour",
+    "width": 9999,
+    "height": 666,
+    "sold": true,
+    "giclee": false,
+    "price": 0,
+    "info": ""
+  },
+  {
+    "title": "Children's Bay Akaroa",
+    "type": "Watercolour",
+    "width": 380,
+    "height": 560,
+    "sold": false,
+    "giclee": false,
+    "price": 2500,
+    "info": "",
+    "pages" : ["marine"]
+  },
+  {
+    "title": "Autumn Light",
+    "type": "Watercolour",
+    "width": 1090,
+    "height": 360,
+    "sold": false,
+    "giclee": false,
+    "price": 4500,
+    "info": "",
+    "pages" : ["marine"]
+  },
+  {
+    "title": "Deep Pockets, Coalgate Sale Yards",
+    "type": "Watercolour",
+    "width": 1020,
+    "height": 380,
+    "sold": false,
+    "giclee": false,
+    "price": 4500,
+    "info": "",
+    "pages" : ["home", "rural"]
+  },
+  {
+    "title": "Haystacks, Yaldhurst",
+    "type": "Watercolour",
+    "width": 560,
+    "height": 380,
+    "sold": true,
+    "giclee": false,
+    "price": 2500,
+    "info": "",
+    "pages" : ["rural"]
+  }
+]
