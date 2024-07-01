@@ -9,11 +9,13 @@ class KelvBase(BaseModel) :
 class PaintingCreate (KelvBase) : 
     title: str
     type: str
-    dimensions: str
+    width: int
+    height: int
     sold: bool
     giclee: bool
     price: float
     info: str
+    aspect_ratio: Optional[str] = None
     galleryLink: Optional[str] = None
     galleryName: Optional[str] = None
     pages: Optional[List[str]] = None
@@ -23,17 +25,20 @@ class Painting (KelvBase) :
     id: int
     title: str
     type: str
-    dimensions: str
+    width: int
+    height: int
     sold: bool
     giclee: bool
     price: float
     info: str
+    aspect_ratio: Optional[str] = None
 
 class Original (KelvBase) : 
     id: int
     title: str
     type: str
-    dimensions: str
+    width: int
+    height: int
     # sold: bool # this will be false so no point returning it.. right? 
     giclee: bool
     price: float
@@ -52,27 +57,33 @@ class PageItem (KelvBase):
 
 # GICLEE
 
-class GicleeOptionAttribute: 
-    id: int
-    dimensions: str
+# return types
+class GicleeOptionAttribute(KelvBase): 
+    id: int # probably dont want to be returning this to the UI
+    width: int
+    height: int
+    aspect_ratio: str # redundant to return this on every option
     price: int
-
 class GicleeOption(KelvBase):
-    option_attribute_id: int # should the UI recieve the id, or the full option attribute object...?
-    gicleeId: int
-
+    painting_id: int # we don't need this returned at the option level
+    option_attributes: GicleeOptionAttribute 
 class Giclee(KelvBase):
-    id: int
-    paintingId: int
-    # can I just return a whole painting here?
-    options: List[GicleeOption] # more complex object
+    painting_id: int 
     page_order: int
+    options: List[GicleeOption] 
 
+
+# create types
+class GicleeOptionAttributeCreate(KelvBase): 
+    width: int
+    height: int
+    aspect_ratio: str
+    price: int
 class GicleeCreate(KelvBase):
-    paintingId: int
-    page_order: int # does not have to be provided. Could use auto increment
-    paintingId: int
-    goa_ids: List[int] # when creating, provide a list of GOA ids
+    painting_id: int
+    page_order: Optional[int] # Auto increment if not provided
+    goa_ids: Optional[List[int]] # when creating, provide a list of GOA ids
+    create_all_for_aspect_ratio: Optional[bool] # if true, create a giclee option for each avaialble dim as long as size is amaller then original size
 
 
 
