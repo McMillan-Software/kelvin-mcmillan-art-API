@@ -16,5 +16,9 @@ pip install "uvicorn[standard]"
 uvicorn - https://www.uvicorn.org/
 
 ### Database:
-pip install sqlite
+(Include in python)
 Sqlite - https://docs.python.org/3/library/sqlite3.html
+
+### ORM:
+pip install SQLAlchemy
+SQLAlchemy - https://www.sqlalchemy.org/
