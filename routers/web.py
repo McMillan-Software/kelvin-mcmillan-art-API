@@ -36,6 +36,17 @@ def get_original_by_id(id: int, session: Session = Depends(get_session)):
     session.close()
     return painting
 
+# GET 5 PAINTINGS WITH HIGHEST IDs for home page
+@router.get("/paintings/home", response_model=list[schemas.Original])
+def get_home_paintings(session: Session = Depends(get_session)):
+    paintings = session.query(models.Painting).filter(models.Painting.sold==False).order_by(models.Painting.id.desc()).limit(5).all()
+    if not paintings:
+        raise HTTPException(status_code=404, detail="No paintings found")
+    
+    session.close()
+    return paintings
+#    paintings = session.query(models.Painting).order_by(models.Painting.id.desc()).limit(5).all()
+
 
 # GET BY ID
 @router.get("/paintings/{id}", response_model=schemas.Painting)
@@ -56,14 +67,4 @@ def get_portfolio_page(page: str, session: Session = Depends(get_session)):
     if not paintings:
         raise HTTPException(status_code=404, detail=f"No paintings found for given page: {page}")
 
-    return paintings
-
-# GET 5 PAINTINGS WITH HIGHEST IDs for home page
-@router.get("/paintings/home", response_model=list[schemas.Painting])
-def get_home_paintings(session: Session = Depends(get_session)):
-    paintings = session.query(models.Painting).order_by(models.Painting.id.desc()).limit(5).all()
-    if not paintings:
-        raise HTTPException(status_code=404, detail="No paintings found")
-    
-    session.close()
     return paintings
