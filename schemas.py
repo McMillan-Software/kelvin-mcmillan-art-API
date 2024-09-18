@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List
 
 class KelvBase(BaseModel) : 
@@ -64,13 +64,16 @@ class GicleeOptionAttribute(KelvBase):
     height: int
     aspect_ratio: str # redundant to return this on every option
     price: int
+
 class GicleeOption(KelvBase):
     painting_id: int # we don't need this returned at the option level
-    option_attributes: GicleeOptionAttribute 
-class Giclee(KelvBase):
-    painting_id: int 
+    option_attributes: GicleeOptionAttribute #= Field(..., alias="parent_attributes")
+
+class Giclee(KelvBase): 
+    painting_id: int
     page_order: int
-    options: List[GicleeOption] 
+    painting: Painting
+    options: List[GicleeOption] #= Field(..., alias="children_options")
 
 
 # create types

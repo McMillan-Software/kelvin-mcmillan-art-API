@@ -45,7 +45,6 @@ def update_painting(id: int, painting_update: schemas.PaintingCreate, session: S
         painting.height = painting_update.height
         painting.sold = painting_update.sold
         painting.giclee = painting_update.giclee
-        painting.imageUrl = painting_update.imageUrl
         painting.price = painting_update.price
         painting.info = painting_update.info
         session.commit()

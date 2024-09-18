@@ -26,7 +26,7 @@ class Painting(Base):
     page_items = relationship("PageItem", back_populates="painting")
     
     # Painting --> Giclee, 1:1
-    child_giclee = relationship("Giclee", back_populates="giclee_parent_painting", uselist=False)
+    child_giclee = relationship("Giclee", back_populates="painting", uselist=False)
 
 
 
@@ -49,10 +49,10 @@ class Giclee(Base):
 
 
     # Giclee <-- Painting, 1:1 
-    giclee_parent_painting = relationship ("Painting", back_populates="child_giclee", uselist=False)
+    painting = relationship ("Painting", back_populates="child_giclee", uselist=False, lazy="joined") # 'eager loaded'
 
     # Giclee --> GicleeOption, 1:N
-    children_options = relationship("GicleeOption", back_populates="parent_giclee_painting")
+    options = relationship("GicleeOption", back_populates="parent_giclee_painting")
 
 
 
@@ -63,10 +63,10 @@ class GicleeOption(Base):
     option_attribute_id = Column(Integer, ForeignKey("giclee_option_attributes.id"))
     
     # GicleeOption <-- Giclee, N:1 
-    parent_giclee_painting = relationship("Giclee", back_populates="children_options")
+    parent_giclee_painting = relationship("Giclee", back_populates="options")
 
     # GicleeOption <-- GicleeOptionAttributes, N:1 
-    parent_attributes = relationship("GicleeOptionAttributes", back_populates="children_options")
+    option_attributes = relationship("GicleeOptionAttributes", back_populates="children_options")
 
    
 
@@ -79,5 +79,6 @@ class GicleeOptionAttributes(Base):
     price = Column(Integer)
 
     # GicleeOptionAttributes --> GicleeOption, 1:N
-    children_options = relationship("GicleeOption", back_populates="parent_attributes")
+    children_options = relationship("GicleeOption", back_populates="option_attributes")
+    # NOTE: probs don't need this here. In no case will an instances of this class hold reference to a GicleeOption, it's 1 way only. Consider this for other cases. 
 

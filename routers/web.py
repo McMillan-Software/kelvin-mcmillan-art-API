@@ -59,32 +59,12 @@ def get_portfolio_page(page: str, session: Session = Depends(get_session)):
 
     return paintings
 
+
 # GET GICLEES
-@router.get("/paintings/giclees", response_model=list[schemas.Giclee])
+@router.get("/paintings/giclees/v2", response_model=list[schemas.Giclee] )
 def get_giclees(session: Session = Depends(get_session)):
 
     print('Getting giclees')
-    
-    # call services....
     giclees = service.get_giclees(session)
-
-    print(f"giclees from query:{giclees}")
-
-    empty_list = []
-
-    return empty_list
-
-
-# GET GICLEES
-@router.get("/paintings/giclees/new")
-def get_giclees(session: Session = Depends(get_session)):
-
-    print('Getting giclees')
-    
-    # call services....
-    giclees = service.get_giclees(session)
-
-    print(f"giclees from query:{giclees}")
-
-
+    print(f"giclees:{giclees}")
     return giclees

@@ -2,6 +2,7 @@
 import models
 import schemas
 from sqlalchemy.orm import Session
+from sqlalchemy.orm import joinedload
 from fastapi import HTTPException
 
 def add_painting(session: Session, painting: schemas.PaintingCreate) -> models.Painting:
@@ -41,60 +42,20 @@ def add_painting(session: Session, painting: schemas.PaintingCreate) -> models.P
             session.add(new_page_item)
     
 # Could now add giclee if giclee is true and giclee options are also not null.
-
     session.commit()
     session.close()
     return newPainting
 
 
 
+def get_giclees(session: Session):
 
-def get_giclees(session: Session): 
+    giclee_records = session.query(models.Giclee).options(
+        joinedload(models.Giclee.painting), 
+        joinedload(models.Giclee.options).joinedload(models.GicleeOption.option_attributes) 
+    ).all()
 
-    # fetch all giclee records
-    giclee_records = session.query(models.Giclee).all()
-
-    # list to contain final Giclee schema objects to be returned
-    giclee_list = []
-
-    # construct full Giclee object for each Giclee record found
-    # this should proable be its own method record -> Giclee Schema
-    for giclee in giclee_records: 
-        
-        # construct giclee_option objects for this giclee
-        giclee_options = []
-        for option in giclee.children_options:
-            
-            # get option_attributes record associated with this option
-            option_attribute = session.query(models.GicleeOptionAttributes).filter_by(id=option.option_attribute_id).first()
-            print(f" Aspect ratio: {option_attribute.aspect_ratio}")
-           
-           # construct GicleeOption schema
-            giclee_option = schemas.GicleeOption(
-                # fields accessed directly from GicleeOption record related directly to the Giclee record
-                # NOTE: there was NO query for these fields, they are contained in a the list returned on the Giclee record
-                id=option.id,
-                painting_id=option.painting_id,
-                # nested GicleeOptionAttributes schema
-                option_attributes=schemas.GicleeOptionAttribute(
-                    id = option_attribute.id,
-                    width = option_attribute.width,
-                    height = option_attribute.height,
-                    aspect_ratio= option_attribute.aspect_ratio,
-                    price  = option_attribute.price
-                )
-            )
-            giclee_options.append(giclee_option)
-
-        # Assemble Giclee schema - once all options have been constructed 
-        giclee_item = schemas.Giclee(
-            painting_id=giclee.painting_id,
-            page_order=giclee.page_order,
-            options=giclee_options
-        )
-        giclee_list.append(giclee_item)
-
-    return giclee_list
+    return [schemas.Giclee.from_orm(giclee) for giclee in giclee_records]
 
 
 
