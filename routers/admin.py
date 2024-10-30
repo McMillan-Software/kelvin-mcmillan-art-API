@@ -41,10 +41,10 @@ def update_painting(id: int, painting_update: schemas.PaintingCreate, session: S
         print('found painting id, matches path variable')
         painting.title = painting_update.title
         painting.type = painting_update.type
-        painting.dimension = painting_update.dimensions
+        painting.width = painting_update.width
+        painting.height = painting_update.height
         painting.sold = painting_update.sold
         painting.giclee = painting_update.giclee
-        painting.imageUrl = painting_update.imageUrl
         painting.price = painting_update.price
         painting.info = painting_update.info
         session.commit()
@@ -66,3 +66,49 @@ def delete_by_id(id: int, session: Session = Depends(get_session)):
         raise HTTPException(status_code=404, detail=f"painting with id {id} not found")
 
     return None
+
+
+# ADD single Giclee for exisitng painting
+@router.post("/giclee", status_code=status.HTTP_201_CREATED, response_model=schemas.Giclee)
+def add_giclee(giclee: schemas.GicleeCreate, session: Session = Depends(get_session)):
+    return service.add_giclee(session, giclee)
+
+
+
+# Add giclee price/size row
+@router.post("/giclee/dimensions", status_code=status.HTTP_201_CREATED, response_model=list[schemas.GicleeOptionAttribute])
+def add_giclee_dimensions(giclee_dimensions: list[schemas.GicleeOptionAttributeCreate], session: Session = Depends(get_session)):
+
+    newDims = []
+
+    for dim in giclee_dimensions:
+        newDim = models.GicleeOptionAttributes(
+            width = dim.width,
+            height = dim.height,
+            aspect_ratio = dim.aspect_ratio,
+            price = dim.price
+        )
+
+        session.add(newDim)
+        session.commit()
+        session.refresh(newDim)
+        newDims.append(newDim)
+
+    return newDims
+
+
+# get GOA
+@router.get("/giclee/dimensions", status_code=status.HTTP_200_OK, response_model=list[schemas.GicleeOptionAttribute])
+def get_all_goa(session: Session = Depends(get_session)):
+    dims = session.query(models.GicleeOptionAttributes).all()
+    session.close()
+    return dims
+
+@router.get("/giclee/options", status_code=status.HTTP_200_OK)
+def get_all_giclee_options(session: Session = Depends(get_session)):
+    options = session.query(models.GicleeOption).all()
+    session.close()
+    return options
+
+
+

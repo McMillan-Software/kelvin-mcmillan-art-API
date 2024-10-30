@@ -1,6 +1,7 @@
 from fastapi import HTTPException, Depends, APIRouter
 from database import get_session
 from sqlalchemy.orm import Session
+import painting_service as service
 import models
 import schemas
 
@@ -68,3 +69,13 @@ def get_portfolio_page(page: str, session: Session = Depends(get_session)):
         raise HTTPException(status_code=404, detail=f"No paintings found for given page: {page}")
 
     return paintings
+
+
+# GET GICLEES
+@router.get("/paintings/giclees/v2", response_model=list[schemas.Giclee] )
+def get_giclees(session: Session = Depends(get_session)):
+
+    print('Getting giclees')
+    giclees = service.get_giclees(session)
+    print(f"giclees:{giclees}")
+    return giclees

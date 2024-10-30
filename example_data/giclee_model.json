@@ -1,6 +1,8 @@
 {
     "id" : "Int",
+    "page_order" : "Int",
     "painting" : {
+        "id" : "Int",
         "title": "String",
         "type": "String",
         "dimensions": "String",

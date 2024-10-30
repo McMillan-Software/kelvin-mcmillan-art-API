@@ -1,0 +1,50 @@
+[
+    {
+        "width": 1090,
+        "height": 360,
+        "aspect_ratio": "3:1",
+        "price": "600"
+    },
+    {
+        "width": 760,
+        "height": 250,
+        "aspect_ratio": "3:1",
+        "price": "400"
+    },
+    {
+        "width": 560,
+        "height": 185,
+        "aspect_ratio": "3:1",
+        "price": "300"
+    },
+    {
+        "width": 400,
+        "height": 130,
+        "aspect_ratio": "3:1",
+        "price": "200"
+    },
+    {
+        "width": 1080,
+        "height": 740,
+        "aspect_ratio": "3:2",
+        "price": "800"
+    },
+    {
+        "width": 750,
+        "height": 510,
+        "aspect_ratio": "3:2",
+        "price": "600"
+    },
+    {
+        "width": 500,
+        "height": 350,
+        "aspect_ratio": "3:2",
+        "price": "400"
+    },
+    {
+        "width": 380,
+        "height": 210,
+        "aspect_ratio": "3:2",
+        "price": "250"
+    }
+]
