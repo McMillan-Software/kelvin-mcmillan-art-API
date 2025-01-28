@@ -1,7 +1,7 @@
 from fastapi import HTTPException, Depends, APIRouter
 from database import get_session
 from sqlalchemy.orm import Session
-import painting_service as service
+import service.painting_service as service
 import models
 import schemas
 

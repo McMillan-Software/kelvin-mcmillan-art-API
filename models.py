@@ -4,7 +4,6 @@ from sqlalchemy.orm import relationship
 from database import Base
 
 
-
 class Painting(Base):
     __tablename__ = 'paintings'
     id = Column(Integer, primary_key=True)
@@ -82,3 +81,10 @@ class GicleeOptionAttributes(Base):
     children_options = relationship("GicleeOption", back_populates="option_attributes")
     # NOTE: probs don't need this here. In no case will an instances of this class hold reference to a GicleeOption, it's 1 way only. Consider this for other cases. 
 
+
+class User(Base):
+    __tablename__ = "users"  
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True, nullable=False)
+    password_hash = Column(String)

@@ -141,7 +141,7 @@ def get_option_schema_from_option_record(session: Session, record: models.Giclee
     return option_schema
     
 
-    
+
 
 def create_giclee_options_from_list(session: Session, giclee_painting_id: int, goa_ids: list):
     print("Creating giclees using given list of GOA ids")

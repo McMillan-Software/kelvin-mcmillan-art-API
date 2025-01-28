@@ -22,3 +22,6 @@ Sqlite - https://docs.python.org/3/library/sqlite3.html
 ### ORM:
 pip install SQLAlchemy
 SQLAlchemy - https://www.sqlalchemy.org/
+
+### Hashing:
+Passlib - https://passlib.readthedocs.io/en/stable/

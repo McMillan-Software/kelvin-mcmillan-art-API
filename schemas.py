@@ -89,9 +89,17 @@ class GicleeCreate(KelvBase):
     create_all_for_aspect_ratio: Optional[bool] # if true, create a giclee option for each avaialble dim as long as size is amaller then original size
 
 
+# Authentication
 
+#Token for authentication
+class Token(KelvBase):
+    access_token: str
+    token_type: str
 
-
+#For logging in
+class User(KelvBase):
+    username: str
+    password: str
     
 
 

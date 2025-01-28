@@ -3,12 +3,57 @@ from starlette import status
 
 from database import get_session
 from sqlalchemy.orm import Session
+
+from utils.hashing import verify_password
+from auth import create_access_token, get_current_user
+
 import models
 import schemas
-import painting_service as service
+import service.painting_service as service
+import service.user_service as user_service
+from models import User
 
 router = APIRouter()
 
+
+#Authentication
+#TODO Remove endpoint!!
+@router.post("/admin/login", response_model=schemas.Token)
+def login(login_data: schemas.User, session: Session = Depends(get_session)):
+    user = user_service.get_user(session, login_data.username)
+    if not user or not verify_password(login_data.password, user.password_hash):
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+    
+    access_token = create_access_token(
+        data={"sub": user.username}
+    )
+    
+    return schemas.Token(access_token=access_token, token_type="bearer")
+
+
+@router.post("/admin/add-user", status_code=201)
+def add_user_endpoint(user: schemas.User, session: Session = Depends(get_session)):
+    """
+    Add a new user to the database using the user_service.
+    """
+    try:
+        new_user = user_service.add_user(session, user)
+        return {"message": f"User {new_user.username} added successfully."}
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+
+@router.get("/admin/validate-authentication", status_code=200)
+def validate_token(current_user: User = Depends(get_current_user)):
+    """
+    Validate the token and ensure the user is authenticated.
+    """
+    return {"message": "Token is valid", "username": current_user.username}
+
+
+#Paintings
 
 # INSERT SINGLE PAINTING
 @router.post("/painting", status_code=status.HTTP_201_CREATED, response_model=schemas.Painting)
@@ -64,9 +109,11 @@ def delete_by_id(id: int, session: Session = Depends(get_session)):
         session.close()
     else:
         raise HTTPException(status_code=404, detail=f"painting with id {id} not found")
-
+    
     return None
 
+
+#Giclee 
 
 # ADD single Giclee for exisitng painting
 @router.post("/giclee", status_code=status.HTTP_201_CREATED, response_model=schemas.Giclee)
