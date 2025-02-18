@@ -5,6 +5,13 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm import joinedload
 from fastapi import HTTPException
 
+
+def get_painting(session: Session, painting_id: int) -> models.Painting:
+    painting = session.query(models.Painting).get(painting_id)
+    if painting is None:
+        raise HTTPException(status_code=404, detail=f"no painting found with given id: {painting_id}")
+    return painting
+
 def add_painting(session: Session, painting: schemas.PaintingCreate) -> models.Painting:
     print(f"adding painting: {painting.title}")
 
@@ -14,7 +21,6 @@ def add_painting(session: Session, painting: schemas.PaintingCreate) -> models.P
         width = painting.width,
         height = painting.height,
         sold = painting.sold,
-        giclee = painting.giclee,
         price = painting.price,
         info = painting.info
     )
@@ -24,15 +30,12 @@ def add_painting(session: Session, painting: schemas.PaintingCreate) -> models.P
         newPainting.galleryLink = painting.galleryLink
     if painting.galleryName is not None:
         newPainting.galleryName = painting.galleryName
-    if painting.aspect_ratio is not None:
-        newPainting.aspect_ratio = painting.aspect_ratio
 
     # add to db
     session.add(newPainting)
     session.commit() # need to generate the id field for related record creation
     session.refresh(newPainting)
     print(f"the id for the new painting: {newPainting.id}")
-
 
 # Handle related record creation
 # Create page item records

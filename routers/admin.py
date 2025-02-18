@@ -1,8 +1,10 @@
-from fastapi import HTTPException, Depends, APIRouter
+from fastapi import HTTPException, Depends, APIRouter, File, UploadFile
 from starlette import status
 
 from database import get_session
 from sqlalchemy.orm import Session
+
+from typing import Annotated
 
 from utils.hashing import verify_password
 from auth import create_access_token, get_current_user
@@ -11,13 +13,13 @@ import models
 import schemas
 import service.painting_service as service
 import service.user_service as user_service
+import service.image_service as image_service
 from models import User
 
 router = APIRouter()
 
 
 #Authentication
-#TODO Remove endpoint!!
 @router.post("/admin/login", response_model=schemas.Token)
 def login(login_data: schemas.User, session: Session = Depends(get_session)):
     user = user_service.get_user(session, login_data.username)
@@ -30,7 +32,7 @@ def login(login_data: schemas.User, session: Session = Depends(get_session)):
     
     return schemas.Token(access_token=access_token, token_type="bearer")
 
-
+#TODO Remove endpoint before deployment
 @router.post("/admin/add-user", status_code=201)
 def add_user_endpoint(user: schemas.User, session: Session = Depends(get_session)):
     """
@@ -55,11 +57,18 @@ def validate_token(current_user: User = Depends(get_current_user)):
 
 #Paintings
 
+
 # INSERT SINGLE PAINTING
-@router.post("/painting", status_code=status.HTTP_201_CREATED, response_model=schemas.Painting)
-def add_painting(painting: schemas.PaintingCreate, session: Session = Depends(get_session)):
+@router.post("/admin/painting", status_code=status.HTTP_201_CREATED, response_model=schemas.Painting)
+def add_painting(painting: schemas.PaintingCreate, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
     return service.add_painting(session, painting)
 
+# Add image to painting
+@router.post("/admin/painting/{id}/image", status_code=status.HTTP_201_CREATED)
+def upload_image(id: int, file: Annotated[UploadFile, File(...)], session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
+    title = service.get_painting(session, id).title
+    image_path = image_service.upload_image(file, title)
+    return {"filename": image_path}
 
 # INSERT MULTIPLE PAINTINGS
 @router.post("/paintings", status_code=status.HTTP_201_CREATED, response_model=list[schemas.Painting])

@@ -12,10 +12,8 @@ class PaintingCreate (KelvBase) :
     width: int
     height: int
     sold: bool
-    giclee: bool
     price: float
     info: str
-    aspect_ratio: Optional[str] = None
     galleryLink: Optional[str] = None
     galleryName: Optional[str] = None
     pages: Optional[List[str]] = None
