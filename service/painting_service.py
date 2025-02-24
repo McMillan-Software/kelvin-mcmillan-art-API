@@ -1,4 +1,3 @@
-
 import models
 import schemas
 from sqlalchemy.orm import Session
@@ -58,9 +57,35 @@ def get_giclees(session: Session):
         joinedload(models.Giclee.options).joinedload(models.GicleeOption.option_attributes) 
     ).all()
 
-    return [schemas.Giclee.from_orm(giclee) for giclee in giclee_records]
+    return [map_giclee(giclee) for giclee in giclee_records]
 
-
+def map_giclee(giclee_model: models.Giclee) -> schemas.Giclee:
+    return schemas.Giclee(
+        painting_id=giclee_model.painting_id,
+        page_order=giclee_model.page_order,
+        painting= schemas.Painting(
+            id=giclee_model.painting.id,
+            title=giclee_model.painting.title,
+            type=giclee_model.painting.type,
+            width=giclee_model.painting.width,
+            height=giclee_model.painting.height,
+            sold=giclee_model.painting.sold,
+            giclee=giclee_model.painting.giclee,
+            price=giclee_model.painting.price,
+            info=giclee_model.painting.info,
+            aspect_ratio=giclee_model.painting.aspect_ratio
+        ),
+        options=[
+            schemas.GicleeOption(
+                option_attributes= schemas.GicleeOptionAttribute(
+                    width=option.option_attributes.width,
+                    height=option.option_attributes.height,
+                    aspect_ratio=option.option_attributes.aspect_ratio,
+                    price=option.option_attributes.price
+                )
+            ) for option in giclee_model.options
+        ]
+    )
 
 def add_giclee(session: Session, giclee: schemas.GicleeCreate):
     

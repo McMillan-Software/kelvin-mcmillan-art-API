@@ -57,14 +57,12 @@ class PageItem (KelvBase):
 
 # return types
 class GicleeOptionAttribute(KelvBase): 
-    id: int # probably dont want to be returning this to the UI
     width: int
     height: int
     aspect_ratio: str # redundant to return this on every option
     price: int
 
 class GicleeOption(KelvBase):
-    painting_id: int # we don't need this returned at the option level
     option_attributes: GicleeOptionAttribute #= Field(..., alias="parent_attributes")
 
 class Giclee(KelvBase): 
