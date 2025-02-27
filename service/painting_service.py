@@ -1,3 +1,4 @@
+from sqlalchemy import String
 import models
 import schemas
 from sqlalchemy.orm import Session
@@ -220,4 +221,9 @@ def create_giclee_options_for_aspect_ratio(session: Session, painting: models.Pa
         print(f"option att id: {option.option_attribute_id}, painting_id: {option.painting_id}")
 
     return createdOptions
-        
+
+def add_image_path(session: Session, painting_id: int, image_path: String):
+    painting = session.query(models.Painting).get(painting_id)
+
+    painting.image_path = image_path
+    session.commit()

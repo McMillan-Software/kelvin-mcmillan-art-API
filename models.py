@@ -20,6 +20,7 @@ class Painting(Base):
     aspect_ratio = Column(String, nullable=True)
     galleryName = Column(String, nullable=True)
     galleryLink = Column(String, nullable=True)
+    image_Path = Column(String, nullable=True)
 
     # Painting --> PageItem, 1:N
     page_items = relationship("PageItem", back_populates="painting")

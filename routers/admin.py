@@ -6,6 +6,8 @@ from sqlalchemy.orm import Session
 
 from typing import Annotated
 
+from pathlib import Path
+
 from utils.hashing import verify_password
 from auth import create_access_token, get_current_user
 
@@ -14,6 +16,7 @@ import schemas
 import service.painting_service as service
 import service.user_service as user_service
 import service.image_service as image_service
+
 from models import User
 
 router = APIRouter()
@@ -66,8 +69,12 @@ def add_painting(painting: schemas.PaintingCreate, session: Session = Depends(ge
 # Add image to painting
 @router.post("/admin/painting/{id}/image", status_code=status.HTTP_201_CREATED)
 def upload_image(id: int, file: Annotated[UploadFile, File(...)], session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
-    title = service.get_painting(session, id).title
-    image_path = image_service.upload_image(file, title)
+    if Path(file.filename).suffix.lower() not in {".jpg", ".jpeg", ".png"}:
+        raise HTTPException(status_code=400)
+    painting = service.get_painting(session, id)
+    image_path = image_service.upload_image(file, painting.title)
+    service.add_image_path(session, painting.id, image_path)
+
     return {"filename": image_path}
 
 # INSERT MULTIPLE PAINTINGS
@@ -159,6 +166,7 @@ def get_all_goa(session: Session = Depends(get_session)):
     dims = session.query(models.GicleeOptionAttributes).all()
     session.close()
     return dims
+
 
 @router.get("/giclee/options", status_code=status.HTTP_200_OK)
 def get_all_giclee_options(session: Session = Depends(get_session)):
