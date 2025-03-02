@@ -3,7 +3,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 # Create a sqlite engine instance
-engine = create_engine("sqlite:///kelvin.db")
+engine = create_engine("sqlite:///kelvin.db", echo=True)
 
 # Create a DeclarativeMeta instance
 Base = declarative_base()

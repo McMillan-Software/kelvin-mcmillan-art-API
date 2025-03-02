@@ -13,44 +13,11 @@ import service.painting_service as service
 import service.user_service as user_service
 from models import User
 
-router = APIRouter()
-
-
-#Authentication
-#TODO Remove endpoint!!
-@router.post("/admin/login", response_model=schemas.Token)
-def login(login_data: schemas.User, session: Session = Depends(get_session)):
-    user = user_service.get_user(session, login_data.username)
-    if not user or not verify_password(login_data.password, user.password_hash):
-        raise HTTPException(status_code=400, detail="Incorrect username or password")
-    
-    access_token = create_access_token(
-        data={"sub": user.username}
-    )
-    
-    return schemas.Token(access_token=access_token, token_type="bearer")
-
-
-@router.post("/admin/add-user", status_code=201)
-def add_user_endpoint(user: schemas.User, session: Session = Depends(get_session)):
-    """
-    Add a new user to the database using the user_service.
-    """
-    try:
-        new_user = user_service.add_user(session, user)
-        return {"message": f"User {new_user.username} added successfully."}
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    
-
-@router.get("/admin/validate-authentication", status_code=200)
-def validate_token(current_user: User = Depends(get_current_user)):
-    """
-    Validate the token and ensure the user is authenticated.
-    """
-    return {"message": "Token is valid", "username": current_user.username}
+router = APIRouter(
+    prefix="/admin",
+    tags=["admin"],
+    dependencies=[Depends(get_current_user)]
+)
 
 
 #Paintings
@@ -75,27 +42,16 @@ def add_paintings(paintings: list[schemas.PaintingCreate], session: Session = De
 # UPDATE PAINTING
 @router.put("/painting/{id}", response_model=schemas.Painting)
 def update_painting(id: int, painting_update: schemas.PaintingCreate, session: Session = Depends(get_session)):
-    painting = session.query(models.Painting).get(id)
+   
+    print(f'Updating paitning with id: {id}')
 
+    painting = service.update_painting(session, id, painting_update)
     if painting:
-        print(f'a painting was found - title: {painting.title}')
+        print(f'Painting successfully updated - id: {id}, title: {painting.title}')
     else:
         raise HTTPException(status_code=404, detail=f"painting with id {id} not found")
-
-    if painting.id == id:
-        print('found painting id, matches path variable')
-        painting.title = painting_update.title
-        painting.type = painting_update.type
-        painting.width = painting_update.width
-        painting.height = painting_update.height
-        painting.sold = painting_update.sold
-        painting.giclee = painting_update.giclee
-        painting.price = painting_update.price
-        painting.info = painting_update.info
-        session.commit()
-
-    session.close()
     return painting
+
 
 
 # DELETE BY ID

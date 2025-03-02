@@ -13,7 +13,7 @@ SECRET_KEY = "mcmi11@ns0ftwar3"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/admin/login") 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login/login") 
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()
@@ -35,6 +35,7 @@ def get_current_user(session: Session = Depends(get_session), token: str = Depen
                 detail="Invalid token: missing username",
             )
         print(f"Retrieving user: {username}")
+        
         # Fetch the user from the database
         user = get_user(session, username)
         if not user:

@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm import joinedload
 from fastapi import HTTPException
 
+# TODO: this needs to be refactored to use the orm... if possible
 def add_painting(session: Session, painting: schemas.PaintingCreate) -> models.Painting:
     print(f"adding painting: {painting.title}")
 
@@ -46,6 +47,33 @@ def add_painting(session: Session, painting: schemas.PaintingCreate) -> models.P
     session.close()
     return newPainting
 
+
+
+# TODO: make sure it is correct to return the painting schema. Should schemas be used at the service layer? reverted to model. Getting unexpexcted error on painting not found
+def update_painting(session: Session, id: int, painting_update: schemas.PaintingCreate) -> models.Painting:
+
+    painting = session.query(models.Painting).get(id)
+
+    if painting:
+        print(f'Painting with id: {id} was found - title: {painting.title}')
+    else:
+        return None
+    
+    if painting.id == id:
+        # TODO: does it really need to be done like this? very manual why not something like: painting = painting_update 
+        painting.title = painting_update.title
+        painting.type = painting_update.type
+        painting.width = painting_update.width
+        painting.height = painting_update.height
+        painting.sold = painting_update.sold
+        painting.giclee = painting_update.giclee
+        painting.price = painting_update.price
+        painting.info = painting_update.info
+        session.commit()
+
+    # TODO: isn't there automatic handling of session closing implemented somewhere...? Some flows do not close
+    session.close()
+    return painting
 
 
 def get_giclees(session: Session):
@@ -115,6 +143,7 @@ def add_giclee(session: Session, giclee: schemas.GicleeCreate):
     session.close()
     return return_giclee
 
+# TODO: does not declare returning anything? 
 def get_option_schema_from_option_record(session: Session, record: models.GicleeOption):
 
     print(f"id value before refresh: {record.id}")

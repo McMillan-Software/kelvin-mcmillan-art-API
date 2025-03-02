@@ -9,11 +9,18 @@ def add_user(session: Session, user: schemas.User) -> models.User:
     print(f"Creating new user: {user.username}")
 
     # Check if the user already exists
+    # Exploding on the line below.
     existing_user = session.query(models.User).filter_by(username=user.username).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already exists.")
+    
+    print('User does not already exist')
 
-    password_hash = hash_password(user.password)
+    try:
+        password_hash = hash_password(user.password)
+    except Exception as e:
+        print(f"Password hashing failed: {e}")
+        raise HTTPException(status_code=500, detail="Password hashing failed")
 
     newUser = models.User(
         username = user.username,
@@ -21,6 +28,7 @@ def add_user(session: Session, user: schemas.User) -> models.User:
     )
 
     session.add(newUser)
+    print('new user added')
     session.commit()
     session.close()
     return newUser
