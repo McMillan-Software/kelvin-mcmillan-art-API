@@ -34,3 +34,9 @@ pip install bcrypt
 
 ### For form data - not 100% sure if this is needed but chatgpt said so... 
 pip install python-multipart
+
+Passlib - https://passlib.readthedocs.io/en/stable/
+
+### AWS:
+pip install boto3
+boto3 - https://boto3.amazonaws.com/v1/documentation/api/latest/index.html

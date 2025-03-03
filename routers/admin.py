@@ -1,16 +1,21 @@
-from fastapi import HTTPException, Depends, APIRouter
+from fastapi import HTTPException, Depends, APIRouter, File, UploadFile
 from starlette import status
 
 from database import get_session
 from sqlalchemy.orm import Session
 
-from utils.hashing import verify_password
-from auth import create_access_token, get_current_user
+from typing import Annotated
+
+from pathlib import Path
+
+from auth import get_current_user
 
 import models
 import schemas
 import service.painting_service as service
 import service.user_service as user_service
+import service.image_service as image_service
+
 from models import User
 
 router = APIRouter(
@@ -19,13 +24,27 @@ router = APIRouter(
     dependencies=[Depends(get_current_user)]
 )
 
+router = APIRouter()
+
 
 #Paintings
 
 # INSERT SINGLE PAINTING
-@router.post("/painting", status_code=status.HTTP_201_CREATED, response_model=schemas.Painting)
-def add_painting(painting: schemas.PaintingCreate, session: Session = Depends(get_session)):
+@router.post("/admin/painting", status_code=status.HTTP_201_CREATED, response_model=schemas.Painting)
+def add_painting(painting: schemas.PaintingCreate, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
     return service.add_painting(session, painting)
+
+
+# Add image to painting
+@router.post("/admin/painting/{id}/image", status_code=status.HTTP_201_CREATED)
+def upload_image(id: int, file: Annotated[UploadFile, File(...)], session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
+    if Path(file.filename).suffix.lower() not in {".jpg", ".jpeg", ".png"}:
+        raise HTTPException(status_code=400)
+    painting = service.get_painting(session, id)
+    image_path = image_service.upload_image(file, painting.title)
+    service.add_image_path(session, painting.id, image_path)
+
+    return {"filename": image_path}
 
 
 # INSERT MULTIPLE PAINTINGS
@@ -53,7 +72,6 @@ def update_painting(id: int, painting_update: schemas.PaintingCreate, session: S
     return painting
 
 
-
 # DELETE BY ID
 @router.delete("/paintings/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_by_id(id: int, session: Session = Depends(get_session)):
@@ -69,13 +87,13 @@ def delete_by_id(id: int, session: Session = Depends(get_session)):
     return None
 
 
+
 #Giclee 
 
 # ADD single Giclee for exisitng painting
 @router.post("/giclee", status_code=status.HTTP_201_CREATED, response_model=schemas.Giclee)
 def add_giclee(giclee: schemas.GicleeCreate, session: Session = Depends(get_session)):
     return service.add_giclee(session, giclee)
-
 
 
 # Add giclee price/size row
@@ -106,6 +124,7 @@ def get_all_goa(session: Session = Depends(get_session)):
     dims = session.query(models.GicleeOptionAttributes).all()
     session.close()
     return dims
+
 
 @router.get("/giclee/options", status_code=status.HTTP_200_OK)
 def get_all_giclee_options(session: Session = Depends(get_session)):

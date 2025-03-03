@@ -1,5 +1,4 @@
 from fastapi import HTTPException, Depends, APIRouter
-from starlette import status
 
 from database import get_session
 from sqlalchemy.orm import Session
@@ -8,53 +7,34 @@ from utils.hashing import verify_password
 from auth import create_access_token, get_current_user
 from fastapi.security import OAuth2PasswordRequestForm
 
-import models
 import schemas
-import service.painting_service as service
 import service.user_service as user_service
 from models import User
 
 router = APIRouter(
-    prefix="/login",
-    tags=["login"],
+    prefix="/authentication",
+    tags=["authentication"],
 )
 
 
 #Authentication
-#TODO Remove endpoint!! - we still need this right?
 @router.post("/login", response_model=schemas.Token)
-def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(get_session)):
-#def login(login_data: schemas.User, session: Session = Depends(get_session)):
-    
-    
-    #user = user_service.get_user(session, login_data.username)
-    # if not user or not verify_password(login_data.password, user.password_hash):
-    #     raise HTTPException(status_code=400, detail="Incorrect username or password")
-    
-    # access_token = create_access_token(
-    #     data={"sub": user.username}
-    # )
+def login(form_data: schemas.User, session: Session = Depends(get_session)):
 
     user = user_service.get_user(session, form_data.username)
     if not user or not verify_password(form_data.password, user.password_hash):
         raise HTTPException(status_code=400, detail="Incorrect username or password")
-    
-    # access_token = jwt.encode(
-    #     {"sub": user.username},
-    #     SECRET_KEY,
-    #     algorithm=ALGORITHM
-    # )
+
 
     access_token = create_access_token(
          data={"sub": user.username}
      )
-
-
-    
     return schemas.Token(access_token=access_token, token_type="bearer")
 
+
 @router.post("/add-user", status_code=201)
-def add_user_endpoint(user: schemas.User, session: Session = Depends(get_session)):
+def add_user_endpoint(user: schemas.User, 
+                      session: Session = Depends(get_session)):
     """
     Add a new user to the database using the user_service.
     """
@@ -66,6 +46,7 @@ def add_user_endpoint(user: schemas.User, session: Session = Depends(get_session
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
+
 @router.get("/validate-authentication", status_code=200)
 def validate_token(current_user: User = Depends(get_current_user)):
     """

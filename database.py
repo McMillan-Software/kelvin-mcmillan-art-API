@@ -10,6 +10,7 @@ Base = declarative_base()
 
 # Create SessionLocal class from sessionmaker factory
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
+
 def get_session():
     session = SessionLocal()
     try:

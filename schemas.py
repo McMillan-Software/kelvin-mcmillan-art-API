@@ -12,10 +12,8 @@ class PaintingCreate (KelvBase) :
     width: int
     height: int
     sold: bool
-    giclee: bool
     price: float
     info: str
-    aspect_ratio: Optional[str] = None
     galleryLink: Optional[str] = None
     galleryName: Optional[str] = None
     pages: Optional[List[str]] = None
@@ -45,6 +43,7 @@ class Original (KelvBase) :
     info: str
     galleryLink: Optional[str] = None
     galleryName: Optional[str] = None
+    image_path: Optional[str] = None
 
 class PageItem (KelvBase):
     id: int
@@ -59,14 +58,12 @@ class PageItem (KelvBase):
 
 # return types
 class GicleeOptionAttribute(KelvBase): 
-    id: int # probably dont want to be returning this to the UI
     width: int
     height: int
     aspect_ratio: str # redundant to return this on every option
     price: int
 
 class GicleeOption(KelvBase):
-    painting_id: int # we don't need this returned at the option level
     option_attributes: GicleeOptionAttribute #= Field(..., alias="parent_attributes")
 
 class Giclee(KelvBase): 

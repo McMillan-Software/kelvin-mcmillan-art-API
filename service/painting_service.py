@@ -1,11 +1,18 @@
-
+from sqlalchemy import String
 import models
 import schemas
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import joinedload
 from fastapi import HTTPException
 
-# TODO: this needs to be refactored to use the orm... if possible
+
+def get_painting(session: Session, painting_id: int) -> models.Painting:
+    painting = session.query(models.Painting).get(painting_id)
+    if painting is None:
+        raise HTTPException(status_code=404, detail=f"no painting found with given id: {painting_id}")
+    return painting
+
+
 def add_painting(session: Session, painting: schemas.PaintingCreate) -> models.Painting:
     print(f"adding painting: {painting.title}")
 
@@ -15,7 +22,6 @@ def add_painting(session: Session, painting: schemas.PaintingCreate) -> models.P
         width = painting.width,
         height = painting.height,
         sold = painting.sold,
-        giclee = painting.giclee,
         price = painting.price,
         info = painting.info
     )
@@ -25,15 +31,12 @@ def add_painting(session: Session, painting: schemas.PaintingCreate) -> models.P
         newPainting.galleryLink = painting.galleryLink
     if painting.galleryName is not None:
         newPainting.galleryName = painting.galleryName
-    if painting.aspect_ratio is not None:
-        newPainting.aspect_ratio = painting.aspect_ratio
 
     # add to db
     session.add(newPainting)
     session.commit() # need to generate the id field for related record creation
     session.refresh(newPainting)
     print(f"the id for the new painting: {newPainting.id}")
-
 
 # Handle related record creation
 # Create page item records
@@ -83,9 +86,35 @@ def get_giclees(session: Session):
         joinedload(models.Giclee.options).joinedload(models.GicleeOption.option_attributes) 
     ).all()
 
-    return [schemas.Giclee.from_orm(giclee) for giclee in giclee_records]
+    return [map_giclee(giclee) for giclee in giclee_records]
 
-
+def map_giclee(giclee_model: models.Giclee) -> schemas.Giclee:
+    return schemas.Giclee(
+        painting_id=giclee_model.painting_id,
+        page_order=giclee_model.page_order,
+        painting= schemas.Painting(
+            id=giclee_model.painting.id,
+            title=giclee_model.painting.title,
+            type=giclee_model.painting.type,
+            width=giclee_model.painting.width,
+            height=giclee_model.painting.height,
+            sold=giclee_model.painting.sold,
+            giclee=giclee_model.painting.giclee,
+            price=giclee_model.painting.price,
+            info=giclee_model.painting.info,
+            aspect_ratio=giclee_model.painting.aspect_ratio
+        ),
+        options=[
+            schemas.GicleeOption(
+                option_attributes= schemas.GicleeOptionAttribute(
+                    width=option.option_attributes.width,
+                    height=option.option_attributes.height,
+                    aspect_ratio=option.option_attributes.aspect_ratio,
+                    price=option.option_attributes.price
+                )
+            ) for option in giclee_model.options
+        ]
+    )
 
 def add_giclee(session: Session, giclee: schemas.GicleeCreate):
     
@@ -221,4 +250,9 @@ def create_giclee_options_for_aspect_ratio(session: Session, painting: models.Pa
         print(f"option att id: {option.option_attribute_id}, painting_id: {option.painting_id}")
 
     return createdOptions
-        
+
+def add_image_path(session: Session, painting_id: int, image_path: String):
+    painting = session.query(models.Painting).get(painting_id)
+
+    painting.image_path = image_path
+    session.commit()
