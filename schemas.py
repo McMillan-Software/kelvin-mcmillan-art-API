@@ -22,27 +22,18 @@ class PaintingCreate (KelvBase) :
 class Painting (KelvBase) : 
     id: int
     title: str
+    location: Optional[str] = None
     type: str
     width: int
     height: int
     sold: bool
+    framed: Optional[bool] = None
     giclee: bool
     price: float
     info: str
     aspect_ratio: Optional[str] = None
-
-class Original (KelvBase) : 
-    id: int
-    title: str
-    type: str
-    width: int
-    height: int
-    # sold: bool # this will be false so no point returning it.. right? 
-    giclee: bool
-    price: float
-    info: str
-    galleryLink: Optional[str] = None
     galleryName: Optional[str] = None
+    galleryLink: Optional[str] = None
     image_path: Optional[str] = None
 
 class PageItem (KelvBase):

@@ -17,7 +17,7 @@ def get_all(session: Session = Depends(get_session)):
 
 
 # GET ALL ORIGINALS
-@router.get("/paintings/originals", response_model=list[schemas.Original])
+@router.get("/paintings/originals", response_model=list[schemas.Painting])
 def get_originals(session: Session = Depends(get_session)):
     paintings = session.query(models.Painting).filter(models.Painting.sold==False).all()
     session.close()
@@ -25,7 +25,7 @@ def get_originals(session: Session = Depends(get_session)):
 
 
 # GET ORIGINAL BY ID
-@router.get("/paintings/originals/{id}", response_model=schemas.Original)
+@router.get("/paintings/originals/{id}", response_model=schemas.Painting)
 def get_original_by_id(id: int, session: Session = Depends(get_session)):
     painting = session.query(models.Painting).get(id)
     if not painting:
@@ -38,7 +38,7 @@ def get_original_by_id(id: int, session: Session = Depends(get_session)):
     return painting
 
 # GET 5 PAINTINGS WITH HIGHEST IDs for home page
-@router.get("/paintings/home", response_model=list[schemas.Original])
+@router.get("/paintings/home", response_model=list[schemas.Painting])
 def get_home_paintings(session: Session = Depends(get_session)):
     paintings = session.query(models.Painting).filter(models.Painting.sold==False).order_by(models.Painting.id.desc()).limit(5).all()
     if not paintings:
