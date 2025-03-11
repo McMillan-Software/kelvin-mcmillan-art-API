@@ -24,24 +24,22 @@ router = APIRouter(
     dependencies=[Depends(get_current_user)]
 )
 
-router = APIRouter()
-
 
 #Paintings
 
 # INSERT SINGLE PAINTING
-@router.post("/admin/painting", status_code=status.HTTP_201_CREATED, response_model=schemas.Painting)
+@router.post("/painting", status_code=status.HTTP_201_CREATED, response_model=schemas.Painting)
 def add_painting(painting: schemas.PaintingCreate, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
     return service.add_painting(session, painting)
 
 
 # Add image to painting
-@router.post("/admin/painting/{id}/image", status_code=status.HTTP_201_CREATED)
+@router.post("/painting/{id}/image", status_code=status.HTTP_201_CREATED)
 def upload_image(id: int, file: Annotated[UploadFile, File(...)], session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
     if Path(file.filename).suffix.lower() not in {".jpg", ".jpeg", ".png"}:
         raise HTTPException(status_code=400)
     painting = service.get_painting(session, id)
-    image_path = image_service.upload_image(file, painting.title)
+    image_path = image_service.upload_image(file, painting.title, painting.type)
     service.add_image_path(session, painting.id, image_path)
 
     return {"filename": image_path}
