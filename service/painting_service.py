@@ -31,6 +31,8 @@ def add_painting(session: Session, painting: schemas.PaintingCreate) -> models.P
         newPainting.galleryLink = painting.galleryLink
     if painting.galleryName is not None:
         newPainting.galleryName = painting.galleryName
+    if painting.price is not None:
+        newPainting.price = painting.price
 
     # add to db
     session.add(newPainting)
