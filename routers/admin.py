@@ -24,19 +24,17 @@ router = APIRouter(
     dependencies=[Depends(get_current_user)]
 )
 
-router = APIRouter()
-
 
 #Paintings
 
 # INSERT SINGLE PAINTING
-@router.post("/admin/painting", status_code=status.HTTP_201_CREATED, response_model=schemas.Painting)
+@router.post("/painting", status_code=status.HTTP_201_CREATED, response_model=schemas.Painting)
 def add_painting(painting: schemas.PaintingCreate, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
     return service.add_painting(session, painting)
 
 
 # Add image to painting
-@router.post("/admin/painting/{id}/image", status_code=status.HTTP_201_CREATED)
+@router.post("/painting/{id}/image", status_code=status.HTTP_201_CREATED)
 def upload_image(id: int, file: Annotated[UploadFile, File(...)], session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
     if Path(file.filename).suffix.lower() not in {".jpg", ".jpeg", ".png"}:
         raise HTTPException(status_code=400)
@@ -120,10 +118,15 @@ def add_giclee_dimensions(giclee_dimensions: list[schemas.GicleeOptionAttributeC
 
 # get GOA
 @router.get("/giclee/dimensions", status_code=status.HTTP_200_OK, response_model=list[schemas.GicleeOptionAttribute])
-def get_all_goa(session: Session = Depends(get_session)):
-    dims = session.query(models.GicleeOptionAttributes).all()
+def get_all_goa(session: Session = Depends(get_session),   aspect_ratio: str | None = None):
+    query = session.query(models.GicleeOptionAttributes)
+
+    if aspect_ratio is not None : 
+        query = query.filter(models.GicleeOptionAttributes.aspect_ratio == aspect_ratio)
+   
+    results = query.all()
     session.close()
-    return dims
+    return results
 
 
 @router.get("/giclee/options", status_code=status.HTTP_200_OK)
@@ -131,6 +134,13 @@ def get_all_giclee_options(session: Session = Depends(get_session)):
     options = session.query(models.GicleeOption).all()
     session.close()
     return options
+
+@router.get("/aspectratios", status_code=status.HTTP_200_OK)
+def get_unique_aspect_ratios(session: Session = Depends(get_session)):
+    unique_values = session.query(models.GicleeOptionAttributes.aspect_ratio).distinct().all()
+    session.close()
+    return [value[0] for value in unique_values] # check if it really needs to be this way
+
 
 
 
