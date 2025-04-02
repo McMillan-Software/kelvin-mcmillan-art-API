@@ -4,6 +4,10 @@ import schemas
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import joinedload
 from fastapi import HTTPException
+from sqlalchemy.orm import Session
+from sqlalchemy import or_, and_
+from typing import List, Optional
+from models import Painting
 
 
 def get_painting(session: Session, painting_id: int) -> models.Painting:
@@ -258,3 +262,70 @@ def add_image_path(session: Session, painting_id: int, image_path: String):
 
     painting.image_path = image_path
     session.commit()
+
+
+def search_paintings(
+    db: Session,
+    q: Optional[str] = None,
+    type: Optional[str] = None,
+    min_width: Optional[int] = None,
+    max_width: Optional[int] = None,
+    min_height: Optional[int] = None,
+    max_height: Optional[int] = None,
+    min_price: Optional[float] = None,
+    max_price: Optional[float] = None,
+    sold: Optional[bool] = None,
+    framed: Optional[bool] = None,
+    giclee: Optional[bool] = None,
+    page: int = 1,
+    limit: int = 10,
+    sort_by: str = "id",
+    sort_order: str = "asc",
+) -> List[Painting]:
+    query = db.query(Painting)
+
+    # Apply filters
+    if q:
+        query = query.filter(
+        or_(
+            Painting.title.ilike(f"%{q}%"),
+            Painting.location.ilike(f"%{q}%"),
+            Painting.info.ilike(f"%{q}%"),
+            Painting.galleryName.ilike(f"%{q}%")
+        )
+    )
+    if type:
+        query = query.filter(Painting.type.ilike(f"%{type}%"))
+
+    if min_width is not None:
+        query = query.filter(Painting.width >= min_width)
+    if max_width is not None:
+        query = query.filter(Painting.width <= max_width)
+    if min_height is not None:
+        query = query.filter(Painting.height >= min_height)
+    if max_height is not None:
+        query = query.filter(Painting.height <= max_height)
+    if min_price is not None:
+        query = query.filter(Painting.price >= min_price)
+    if max_price is not None:
+        query = query.filter(Painting.price <= max_price)
+
+    if sold is not None:
+        query = query.filter(Painting.sold == sold)
+    if framed is not None:
+        query = query.filter(Painting.framed == framed)
+    if giclee is not None:
+        query = query.filter(Painting.giclee == giclee)
+
+    # Sorting
+    sort_column = getattr(Painting, sort_by, None)
+    if sort_column:
+        if sort_order.lower() == "desc":
+            query = query.order_by(sort_column.desc())
+        else:
+            query = query.order_by(sort_column.asc())
+
+    # Pagination
+    query = query.offset((page - 1) * limit).limit(limit)
+
+    return query.all()    

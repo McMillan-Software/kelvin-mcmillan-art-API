@@ -1,15 +1,16 @@
-from fastapi import HTTPException, Depends, APIRouter, File, UploadFile
+from fastapi import HTTPException, Depends, APIRouter, File, UploadFile, Query
 from starlette import status
 
 from database import get_session
 from sqlalchemy.orm import Session
 
-from typing import Annotated
+from typing import Annotated, List, Optional
 
 from pathlib import Path
 
 from auth import get_current_user
 
+from models import Painting 
 import models
 import schemas
 import service.painting_service as service
@@ -132,3 +133,40 @@ def get_all_giclee_options(session: Session = Depends(get_session)):
 
 
 
+@router.get("/paintings",status_code=status.HTTP_200_OK, response_model=List[schemas.Painting])
+def get_paintings(
+    db: Session = Depends(get_session),
+    q: Optional[str] = Query(None, description="Multple string contains"),
+    type: Optional[str] = Query(None, description="Type contains"),
+    minWidth: Optional[int] = Query(None, description="Minimum width"),
+    maxWidth: Optional[int] = Query(None, description="Maximum width"),
+    minHeight: Optional[int] = Query(None, description="Minimum height"),
+    maxHeight: Optional[int] = Query(None, description="Maximum height"),
+    minPrice: Optional[float] = Query(None, description="Minimum price"),
+    maxPrice: Optional[float] = Query(None, description="Maximum price"),
+    sold: Optional[bool] = Query(None, description="Sold status"),
+    framed: Optional[bool] = Query(None, description="Framed status"),
+    giclee: Optional[bool] = Query(None, description="Giclee status"),
+    page: int = Query(1, description="Page number"),
+    limit: int = Query(10, description="Number of items per page"),
+    sort_by: str = Query("id", description="Sort field"),
+    sort_order: str = Query("asc", description="Sort order (asc/desc)"),
+):
+    return service.search_paintings(
+        db=db,
+        q=q,
+        type=type,
+        min_width=minWidth,
+        max_width=maxWidth,
+        min_height=minHeight,
+        max_height=maxHeight,
+        min_price=minPrice,
+        max_price=maxPrice,
+        sold=sold,
+        framed=framed,
+        giclee=giclee,
+        page=page,
+        limit=limit,
+        sort_by=sort_by,
+        sort_order=sort_order,
+    )
