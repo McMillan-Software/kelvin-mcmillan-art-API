@@ -1,13 +1,9 @@
 from fastapi import HTTPException, Depends, APIRouter, File, UploadFile
 from starlette import status
-
 from database import get_session
 from sqlalchemy.orm import Session
-
 from typing import Annotated
-
 from pathlib import Path
-
 from auth import get_current_user
 
 import models
@@ -15,8 +11,9 @@ import schemas
 import service.painting_service as service
 import service.user_service as user_service
 import service.image_service as image_service
-
+import logging
 from models import User
+
 
 router = APIRouter(
     prefix="/admin",
@@ -88,9 +85,10 @@ def delete_by_id(id: int, session: Session = Depends(get_session)):
 
 #Giclee 
 
-# ADD single Giclee for exisitng painting
-@router.post("/giclee", status_code=status.HTTP_201_CREATED, response_model=schemas.Giclee)
+# ADD single or many Giclees for exisitng painting
+@router.post("/giclee", status_code=status.HTTP_201_CREATED, response_model=list[schemas.GicleeOption])
 def add_giclee(giclee: schemas.GicleeCreate, session: Session = Depends(get_session)):
+    logger.info(f"Adding giclee for paiting with id: {giclee.painting_id}. goa_id(s): {giclee.goa_ids}")
     return service.add_giclee(session, giclee)
 
 

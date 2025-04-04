@@ -49,12 +49,15 @@ class PageItem (KelvBase):
 
 # return types
 class GicleeOptionAttribute(KelvBase): 
+    id: int
     width: int
     height: int
-    aspect_ratio: str # redundant to return this on every option
+    aspect_ratio: str
     price: int
 
+# doesn't not include GicleeOption.id for some reason
 class GicleeOption(KelvBase):
+    painting_id: int
     option_attributes: GicleeOptionAttribute #= Field(..., alias="parent_attributes")
 
 class Giclee(KelvBase): 
@@ -72,9 +75,9 @@ class GicleeOptionAttributeCreate(KelvBase):
     price: int
 class GicleeCreate(KelvBase):
     painting_id: int
-    page_order: Optional[int] # Auto increment if not provided
+    page_order: Optional[int]
     goa_ids: Optional[List[int]] # when creating, provide a list of GOA ids
-    create_all_for_aspect_ratio: Optional[bool] # if true, create a giclee option for each avaialble dim as long as size is amaller then original size
+    create_all_for_aspect_ratio: Optional[bool] # if true, create a giclee option record for each avaialable dim as long as size is amaller then original size
 
 
 # Authentication

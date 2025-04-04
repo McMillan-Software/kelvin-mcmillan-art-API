@@ -1,5 +1,5 @@
 
-from sqlalchemy import  Column, Integer, String, Boolean, Float, ForeignKey
+from sqlalchemy import  Column, Integer, String, Boolean, Float, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -61,6 +61,11 @@ class GicleeOption(Base):
     id = Column(Integer, primary_key=True)
     painting_id = Column(Integer, ForeignKey('giclees.painting_id'))
     option_attribute_id = Column(Integer, ForeignKey("giclee_option_attributes.id"))
+
+# TODO: this is not working.
+    __table_args__ = (
+        UniqueConstraint('painting_id', 'option_attribute_id', name='_painting_option_attribute_uc'),
+    )
     
     # GicleeOption <-- Giclee, N:1 
     parent_giclee_painting = relationship("Giclee", back_populates="options")

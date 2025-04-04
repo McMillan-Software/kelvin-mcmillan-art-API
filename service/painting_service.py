@@ -34,7 +34,8 @@ def add_painting(session: Session, painting: schemas.PaintingCreate) -> models.P
 
     # add to db
     session.add(newPainting)
-    session.commit() # need to generate the id field for related record creation
+    session.commit() # need to generate the id field for related record creation\
+    # TODO: investigate why we commit here and then again below
     session.refresh(newPainting)
     print(f"the id for the new painting: {newPainting.id}")
 
@@ -75,6 +76,7 @@ def update_painting(session: Session, id: int, painting_update: schemas.Painting
         session.commit()
 
     # TODO: isn't there automatic handling of session closing implemented somewhere...? Some flows do not close
+    # TODO: wheres the commit...? Is it automatic
     session.close()
     return painting
 
@@ -108,6 +110,7 @@ def map_giclee(giclee_model: models.Giclee) -> schemas.Giclee:
         options=[
             schemas.GicleeOption(
                 option_attributes= schemas.GicleeOptionAttribute(
+                    id = option.option_attributes.id,
                     width=option.option_attributes.width,
                     height=option.option_attributes.height,
                     aspect_ratio=option.option_attributes.aspect_ratio,
@@ -116,6 +119,8 @@ def map_giclee(giclee_model: models.Giclee) -> schemas.Giclee:
             ) for option in giclee_model.options
         ]
     )
+
+
 
 def add_giclee(session: Session, giclee: schemas.GicleeCreate):
     
@@ -128,24 +133,26 @@ def add_giclee(session: Session, giclee: schemas.GicleeCreate):
    
     print(f"Title of parent painting: {painting.title}")
 
-    print("Creating new giclee record")
-    newGiclee = models.Giclee(
-        painting_id = giclee.painting_id,
-        page_order = giclee.page_order  
-    )
-    session.add(newGiclee)
-    
-    print(f"new giclee record created for painting id: {painting.id}")
+    giclee_record = session.query(models.Giclee).filter(models.Giclee.painting_id == giclee.painting_id)
+    if giclee_record is None: 
+        print("No existing giclee record found. ")
+        giclee_record = create_giclee_record_for_painting_id(giclee.id)
+    else: 
+        print(f"exisitng giclee record found: {giclee_record}")
+
+
+
 
 
    # Create associated GicleeOption records
     new_options_records = []
      # option creation method 1: make all for aspect ratio
     if(giclee.create_all_for_aspect_ratio):
-       new_options_records = create_giclee_options_for_aspect_ratio(session, painting)
+       print(f"Creating all giclee options for aspect ratio. NOT RECCOMENDED")
+       new_options_records = create_giclee_options_for_aspect_ratio(session, painting) 
     # option creation method 2: with a list of GOA ids
     else: 
-        new_options_records = create_giclee_options_from_list(session, painting.id, giclee.goa_ids)
+        new_options_records = create_giclee_options_from_list(session, painting.id, giclee.goa_ids) 
 
     print(f"Created Option records: {new_options_records}")
 
@@ -155,20 +162,24 @@ def add_giclee(session: Session, giclee: schemas.GicleeCreate):
     session.commit()
     print("DB changes comitted")
 
+    return new_options_records
 
-    # construct giclee object to return
-    print("creating Option schemas")
-    new_option_schemas = []
-    for option_record in new_options_records:
-        print(f"Sending to method: option goa id: {option_record.option_attribute_id}")
-        new_option_schemas.append(get_option_schema_from_option_record(session, option_record))
+    
 
-    print("Creating Giclee Schema")
-    return_giclee = schemas.Giclee(
-        painting_id= newGiclee.painting_id,
-        page_order= newGiclee.page_order,
-        options=new_option_schemas
-    )
+
+    # # construct giclee object to return
+    # print("creating Option schemas")
+    # new_option_schemas = []
+    # for option_record in new_options_records:
+    #     print(f"Sending to method: option goa id: {option_record.option_attribute_id}")
+    #     new_option_schemas.append(get_option_schema_from_option_record(session, option_record))
+
+    # print("Creating Giclee Schema")
+    # return_giclee = schemas.Giclee(
+    #     painting_id= newGiclee.painting_id,
+    #     page_order= newGiclee.page_order,
+    #     options=new_option_schemas
+    # )
 
     session.close()
     return return_giclee
@@ -198,19 +209,77 @@ def get_option_schema_from_option_record(session: Session, record: models.Giclee
         )
     )
     return option_schema
-    
 
 
 
-def create_giclee_options_from_list(session: Session, giclee_painting_id: int, goa_ids: list):
+def create_giclee_record_for_painting_id(session: Session, painting_id: int):
+
+    print(f"creating giclee record for paitning_id: {painting_id}")
+
+    new_giclee = models.Giclee(
+        painting_id=painting_id,
+        page_order=0
+    )
+
+    session.add(new_giclee)
+
+    print(f"successfully created giclee record: {new_giclee}")
+    return new_giclee
+
+
+
+def create_giclee_options_from_list(session: Session, painting_id: int, goa_ids: list):
     print("Creating giclees using given list of GOA ids")
+
+    # Conditions to consider when adding GicleeOption records: 
+    # 1. aspect ratio is the same as exisitng giclees: 
+    # 2. there is not already an exisiting gicle option of the same dimensions - handled by db config UniqueConstraint
+
+    # get an exisiting GicleeOption for this painting if it exists
+    first_giclee_option = session.query(models.GicleeOption).filter(
+        models.GicleeOption.painting_id == painting_id
+        ).first()
+
+    created_options = []
+        
+    # Create the GicleeOption records:
     for goa_id in goa_ids:
-        print(f"creating giclee option with dimensions: {goa_id}")
+        print(f"Creating giclee option with dimensions: {goa_id}")
+
+        # check if GOA id provided actually exists
+        goa_record = session.query(models.GicleeOptionAttributes).filter_by(id=goa_id).first()
+        if goa_record is None:
+            raise HTTPException(status_code=400, detail="No existing giclee attributes record exists with the provided id")
+        
+        # check aspect ratio of new option is consistent with exisiting giclee options
+        if first_giclee_option:
+            existing_aspect_ratio = first_giclee_option.option_attributes.aspect_ratio
+            if goa_record.aspect_ratio != existing_aspect_ratio:
+                raise HTTPException(status_code=400, detail="Painting already has Giclee options with a different aspect ratio. ")
+
+
+        exisitng_giclee_with_same_dims = session.query(models.GicleeOption
+            ).filter(
+                models.GicleeOption.option_attribute_id == goa_id
+            ).filter(
+                models.GicleeOption.painting_id == painting_id
+                ).first()
+        
+        if exisitng_giclee_with_same_dims:
+            raise HTTPException(status_code=400, detail="Painting already has Giclee option with the same dimensions.")
+
+            
+        #TODO: Better method: instead enforce that the paintings aspect ratio is set and then assert based off that field.
+
+        print(f"Adding new giclee options for painting with id: {painting_id}, width: {goa_record.width}")
         newGicleeOption = models.GicleeOption(
             option_attribute_id=goa_id,
-            painting_id=giclee_painting_id,
+            painting_id=painting_id,
         )
         session.add(newGicleeOption)
+        created_options.append(newGicleeOption)
+
+    return created_options
 
 
 def create_giclee_options_for_aspect_ratio(session: Session, painting: models.Painting):
