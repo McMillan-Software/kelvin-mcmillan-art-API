@@ -88,7 +88,7 @@ def delete_by_id(id: int, session: Session = Depends(get_session)):
 # ADD single or many Giclees for exisitng painting
 @router.post("/giclee", status_code=status.HTTP_201_CREATED, response_model=list[schemas.GicleeOption])
 def add_giclee(giclee: schemas.GicleeCreate, session: Session = Depends(get_session)):
-    logger.info(f"Adding giclee for paiting with id: {giclee.painting_id}. goa_id(s): {giclee.goa_ids}")
+    print(f"Adding giclee for paiting with id: {giclee.painting_id}. goa_id(s): {giclee.goa_ids}")
     return service.add_giclee(session, giclee)
 
 

@@ -109,6 +109,7 @@ def map_giclee(giclee_model: models.Giclee) -> schemas.Giclee:
         ),
         options=[
             schemas.GicleeOption(
+                painting_id = giclee_model.painting_id,
                 option_attributes= schemas.GicleeOptionAttribute(
                     id = option.option_attributes.id,
                     width=option.option_attributes.width,
@@ -133,10 +134,11 @@ def add_giclee(session: Session, giclee: schemas.GicleeCreate):
    
     print(f"Title of parent painting: {painting.title}")
 
-    giclee_record = session.query(models.Giclee).filter(models.Giclee.painting_id == giclee.painting_id)
+    # check for exisitng giclee record, create if none exists
+    giclee_record = session.query(models.Giclee).filter(models.Giclee.painting_id == giclee.painting_id).first()
     if giclee_record is None: 
         print("No existing giclee record found. ")
-        giclee_record = create_giclee_record_for_painting_id(giclee.id)
+        giclee_record = create_giclee_record_for_painting_id(session, giclee.painting_id)
     else: 
         print(f"exisitng giclee record found: {giclee_record}")
 
