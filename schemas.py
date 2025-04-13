@@ -73,11 +73,26 @@ class GicleeOptionAttributeCreate(KelvBase):
     height: int
     aspect_ratio: str
     price: int
+
 class GicleeCreate(KelvBase):
     painting_id: int
     page_order: Optional[int]
     goa_ids: Optional[List[int]] # when creating, provide a list of GOA ids
     create_all_for_aspect_ratio: Optional[bool] # if true, create a giclee option record for each avaialable dim as long as size is amaller then original size
+
+
+
+class GicleeValidOption(KelvBase): 
+    paintingHasOption: bool
+    option: GicleeOptionAttribute
+
+
+class GicleeValidOptions(KelvBase):
+    painting_id: int
+    aspect_ratio: str
+    valid_options: List[GicleeValidOption]
+
+
 
 
 # Authentication
@@ -91,7 +106,3 @@ class Token(KelvBase):
 class User(KelvBase):
     username: str
     password: str
-    
-
-
-

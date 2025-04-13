@@ -4,6 +4,7 @@ import schemas
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import joinedload
 from fastapi import HTTPException
+from pprint import pprint
 
 
 def get_painting(session: Session, painting_id: int) -> models.Painting:
@@ -125,16 +126,15 @@ def map_giclee(giclee_model: models.Giclee) -> schemas.Giclee:
 
 def add_giclee(session: Session, giclee: schemas.GicleeCreate):
     
+    # Get the Painting record
     print(f"adding giclee for painting with id: {giclee.painting_id}")
     painting = session.query(models.Painting).get(giclee.painting_id)
-    
     if painting is None: 
         print(f"No exisiting painting found with id: {giclee.painting_id}")
         raise HTTPException(status_code=400, detail=f"No painting found for painting id: {giclee.painting_id}")
-   
-    print(f"Title of parent painting: {painting.title}")
+    print(f"Title of parent painting: {painting.title}, width: {painting.width}, height: {painting.height}, aspectRatio: {painting.aspect_ratio}")
 
-    # check for exisitng giclee record, create if none exists
+    # Check for exisitng giclee record, create if none exists
     giclee_record = session.query(models.Giclee).filter(models.Giclee.painting_id == giclee.painting_id).first()
     if giclee_record is None: 
         print("No existing giclee record found. ")
@@ -143,48 +143,23 @@ def add_giclee(session: Session, giclee: schemas.GicleeCreate):
         print(f"exisitng giclee record found: {giclee_record}")
 
 
-
-
-
-   # Create associated GicleeOption records
+   # Create GicleeOption records
     new_options_records = []
-     # option creation method 1: make all for aspect ratio
+     # option creation method 1: make all for aspect ratio - (not used or well tested)
     if(giclee.create_all_for_aspect_ratio):
-       print(f"Creating all giclee options for aspect ratio. NOT RECCOMENDED")
+       print(f"Creating all giclee options for aspect ratio.")
        new_options_records = create_giclee_options_for_aspect_ratio(session, painting) 
     # option creation method 2: with a list of GOA ids
     else: 
         new_options_records = create_giclee_options_from_list(session, painting.id, giclee.goa_ids) 
 
+
     print(f"Created Option records: {new_options_records}")
-
-
-    # can now commit as nothing else will be added
-    print("About to commit...")
     session.commit()
     print("DB changes comitted")
-
+    session.close()
     return new_options_records
 
-    
-
-
-    # # construct giclee object to return
-    # print("creating Option schemas")
-    # new_option_schemas = []
-    # for option_record in new_options_records:
-    #     print(f"Sending to method: option goa id: {option_record.option_attribute_id}")
-    #     new_option_schemas.append(get_option_schema_from_option_record(session, option_record))
-
-    # print("Creating Giclee Schema")
-    # return_giclee = schemas.Giclee(
-    #     painting_id= newGiclee.painting_id,
-    #     page_order= newGiclee.page_order,
-    #     options=new_option_schemas
-    # )
-
-    session.close()
-    return return_giclee
 
 # TODO: does not declare returning anything? 
 def get_option_schema_from_option_record(session: Session, record: models.GicleeOption):
@@ -328,3 +303,29 @@ def add_image_path(session: Session, painting_id: int, image_path: String):
 
     painting.image_path = image_path
     session.commit()
+
+
+
+def get_valid_giclee_options_for_painting(session: Session, painting: models.Painting, aspect_ratio: str): 
+    print(f"getting valid giclee_options for paiting: {painting.title}, aspect_ratio: {aspect_ratio}")
+
+    candidate_options = session.query(models.GicleeOptionAttributes).filter(models.GicleeOptionAttributes.aspect_ratio == aspect_ratio).all()
+
+
+    for opt in candidate_options:
+        pprint({k: v for k, v in vars(opt).items() if not k.startswith("_")})
+
+     
+    giclee = painting.child_giclee
+    if giclee: 
+        existing_goa_ids = {
+            g.option_attribute_id
+            for g in giclee.options
+        }
+    else: 
+        existing_goa_ids = set()
+   
+    
+    print(f"existing goa ids: {existing_goa_ids}")
+
+    return candidate_options
