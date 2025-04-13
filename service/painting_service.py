@@ -328,4 +328,11 @@ def get_valid_giclee_options_for_painting(session: Session, painting: models.Pai
     
     print(f"existing goa ids: {existing_goa_ids}")
 
+    giclee_valid_options = [
+        schemas.GicleeValidOption(
+            option = opt,
+            paintingHasOption= opt.id in existing_goa_ids
+        )
+    ]
+
     return candidate_options
