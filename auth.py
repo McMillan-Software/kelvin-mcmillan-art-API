@@ -13,7 +13,7 @@ SECRET_KEY = "mcmi11@ns0ftwar3"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login/login") 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/authentication/login") 
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()

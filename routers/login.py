@@ -19,7 +19,7 @@ router = APIRouter(
 
 #Authentication
 @router.post("/login", response_model=schemas.Token)
-def login(form_data: schemas.User, session: Session = Depends(get_session)):
+def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(get_session)):
 
     user = user_service.get_user(session, form_data.username)
     if not user or not verify_password(form_data.password, user.password_hash):

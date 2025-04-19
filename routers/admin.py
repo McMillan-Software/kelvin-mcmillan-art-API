@@ -1,13 +1,11 @@
 from fastapi import HTTPException, Depends, APIRouter, File, UploadFile, Query
 from starlette import status
-
 from database import get_session
 from sqlalchemy.orm import Session
 
 from typing import Annotated, List, Optional
 
 from pathlib import Path
-
 from auth import get_current_user
 
 from models import Painting 
@@ -16,8 +14,9 @@ import schemas
 import service.painting_service as service
 import service.user_service as user_service
 import service.image_service as image_service
-
+import logging
 from models import User
+
 
 router = APIRouter(
     prefix="/admin",
@@ -89,9 +88,10 @@ def delete_by_id(id: int, session: Session = Depends(get_session)):
 
 #Giclee 
 
-# ADD single Giclee for exisitng painting
-@router.post("/giclee", status_code=status.HTTP_201_CREATED, response_model=schemas.Giclee)
+# ADD single or many Giclees for exisitng painting
+@router.post("/giclee", status_code=status.HTTP_201_CREATED, response_model=list[schemas.GicleeOption])
 def add_giclee(giclee: schemas.GicleeCreate, session: Session = Depends(get_session)):
+    print(f"Adding giclee for paiting with id: {giclee.painting_id}. goa_id(s): {giclee.goa_ids}")
     return service.add_giclee(session, giclee)
 
 
@@ -119,10 +119,15 @@ def add_giclee_dimensions(giclee_dimensions: list[schemas.GicleeOptionAttributeC
 
 # get GOA
 @router.get("/giclee/dimensions", status_code=status.HTTP_200_OK, response_model=list[schemas.GicleeOptionAttribute])
-def get_all_goa(session: Session = Depends(get_session)):
-    dims = session.query(models.GicleeOptionAttributes).all()
+def get_all_goa(session: Session = Depends(get_session),   aspect_ratio: str | None = None):
+    query = session.query(models.GicleeOptionAttributes)
+
+    if aspect_ratio is not None : 
+        query = query.filter(models.GicleeOptionAttributes.aspect_ratio == aspect_ratio)
+   
+    results = query.all()
     session.close()
-    return dims
+    return results
 
 
 @router.get("/giclee/options", status_code=status.HTTP_200_OK)
@@ -130,6 +135,42 @@ def get_all_giclee_options(session: Session = Depends(get_session)):
     options = session.query(models.GicleeOption).all()
     session.close()
     return options
+
+@router.get("/aspectratios", status_code=status.HTTP_200_OK)
+def get_unique_aspect_ratios(session: Session = Depends(get_session)):
+    unique_values = session.query(models.GicleeOptionAttributes.aspect_ratio).distinct().all() 
+    session.close()
+    return [value[0] for value in unique_values] # check if it really needs to be this way
+
+@router.get("/giclee/{painting_id}/valid-options", status_code=status.HTTP_200_OK)
+def get_valid_giclee_options_for_painting(paitning_id: int,  session: Session = Depends(get_session), aspect_ratio: str | None = None): 
+    
+    print(f"Getting valid giclee options for painting_id: {paitning_id}")
+
+    painting = session.query(models.Painting).filter(models.Painting.id == paitning_id).first()
+    if painting is None:
+        raise HTTPException(status_code=404, detail=f"painting with id {id} not found")
+
+
+    painting_aspect_ratio = painting.aspect_ratio
+
+    # If an aspect_ratio was provided and the paiting aspect_ratio was already set, these values must match or there are no valid options
+    if aspect_ratio is not None and painting_aspect_ratio is not None:
+        
+        if aspect_ratio != painting_aspect_ratio:
+            raise HTTPException(status_code=401, detail=f"Painting aspect ratio has already been set to {painting_aspect_ratio}")
+
+
+
+    # if painting aspect_ratio has not been set, one must be provided on the request to find valid options:
+    # or just return a list of EVERYTHING...?  
+    # if painting_aspect_ratio is None and aspect_ratio is None: 
+    #     raise HTTPException(status_code=401, detail=f"The painting aspect_ratio has not been set, an aspect ratio must be provided")
+
+    if aspect_ratio is None:
+        aspect_ratio = painting_aspect_ratio
+
+    return service.get_valid_giclee_options_for_painting(session, painting, aspect_ratio)
 
 
 
