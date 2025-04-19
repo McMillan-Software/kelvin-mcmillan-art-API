@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from database import Base, engine
 from fastapi.middleware.cors import CORSMiddleware
 from routers import web, admin, login
+import logging
 
 
 # Create the database
