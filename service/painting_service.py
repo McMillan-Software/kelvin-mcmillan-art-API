@@ -28,6 +28,7 @@ def add_painting(session: Session, painting: schemas.PaintingCreate) -> models.P
         width = painting.width,
         height = painting.height,
         sold = painting.sold,
+        framed = painting.framed,
         price = painting.price,
         info = painting.info
     )
