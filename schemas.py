@@ -12,6 +12,7 @@ class PaintingCreate (KelvBase) :
     width: int
     height: int
     sold: bool
+    framed: bool
     price: Optional[float] = None
     info: str
     galleryLink: Optional[str] = None
