@@ -406,6 +406,11 @@ def get_valid_giclee_options_for_painting(session: Session, painting: models.Pai
             option = opt,
             paintingHasOption= opt.id in existing_goa_ids
         )
+        for opt in candidate_options
     ]
 
-    return candidate_options
+    return schemas.GicleeValidOptions(
+        painting_id=painting.id,
+        aspect_ratio= aspect_ratio,
+        valid_options=giclee_valid_options
+    )
