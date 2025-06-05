@@ -19,6 +19,20 @@ class PaintingCreate (KelvBase) :
     galleryName: Optional[str] = None
     pages: Optional[List[str]] = None
 
+class PaintingEdit (KelvBase) :
+    title: Optional[str] = None
+    type: Optional[str] = None
+    width: Optional[int] = None
+    height: Optional[int] = None
+    sold: Optional[bool] = None
+    framed: Optional[bool] = None
+    price: Optional[int] = None
+    info: Optional[str] = None
+    galleryLink: Optional[str] = None
+    galleryName: Optional[str] = None
+    pages: Optional[List[str]] = None
+
+
 # for returning a basic painting object
 class Painting (KelvBase) : 
     id: int

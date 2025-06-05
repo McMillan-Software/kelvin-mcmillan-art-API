@@ -2,6 +2,7 @@ from sqlalchemy import String
 import models
 import schemas
 from sqlalchemy.orm import Session
+from sqlalchemy import update
 from sqlalchemy.orm import joinedload
 from fastapi import HTTPException
 
@@ -57,37 +58,8 @@ def add_painting(session: Session, painting: schemas.PaintingCreate) -> models.P
     
 # Could now add giclee if giclee is true and giclee options are also not null.
     session.commit()
-    session.close()
     return newPainting
 
-
-
-# TODO: make sure it is correct to return the painting schema. Should schemas be used at the service layer? reverted to model. Getting unexpexcted error on painting not found
-def update_painting(session: Session, id: int, painting_update: schemas.PaintingCreate) -> models.Painting:
-
-    painting = session.query(models.Painting).get(id)
-
-    if painting:
-        print(f'Painting with id: {id} was found - title: {painting.title}')
-    else:
-        return None
-    
-    if painting.id == id:
-        # TODO: does it really need to be done like this? very manual why not something like: painting = painting_update 
-        painting.title = painting_update.title
-        painting.type = painting_update.type
-        painting.width = painting_update.width
-        painting.height = painting_update.height
-        painting.sold = painting_update.sold
-        painting.giclee = painting_update.giclee
-        painting.price = painting_update.price
-        painting.info = painting_update.info
-        session.commit()
-
-    # TODO: isn't there automatic handling of session closing implemented somewhere...? Some flows do not close
-    # TODO: wheres the commit...? Is it automatic
-    session.close()
-    return painting
 
 
 def get_giclees(session: Session):
@@ -165,7 +137,6 @@ def add_giclee(session: Session, giclee: schemas.GicleeCreate):
     print(f"Created Option records: {new_options_records}")
     session.commit()
     print("DB changes comitted")
-    session.close()
     return new_options_records
 
 
@@ -311,6 +282,55 @@ def add_image_path(session: Session, painting_id: int, image_path: String):
 
     painting.image_path = image_path
     session.commit()
+
+def edit_painting(
+    session: Session,
+    id: int,
+    title: Optional[str] = None,
+    type: Optional[str] = None,
+    width: Optional[str] = None,
+    height: Optional[str] = None,
+    sold: Optional[bool] = None,
+    framed: Optional[bool] = None,
+    price: Optional[float] = None,
+    info: Optional[str] = None,
+    galleryLink: Optional[str] = None,
+    galleryName: Optional[str] = None,
+    pages: Optional[List[str]] = None
+) -> models.Painting:
+    update_fields = {}
+    if title is not None:
+        update_fields[models.Painting.title] = title
+    if type is not None:
+        update_fields[models.Painting.type] = type
+    if width is not None:
+        update_fields[models.Painting.width] = width
+    if height is not None:
+        update_fields[models.Painting.height] = height
+    if sold is not None:
+        update_fields[models.Painting.sold] = sold
+    if framed is not None:
+        update_fields[models.Painting.framed] = framed
+    if price is not None:
+        update_fields[models.Painting.price] = price
+    if info is not None:
+        update_fields[models.Painting.info] = info
+    if galleryLink is not None:
+        update_fields[models.Painting.galleryLink] = galleryLink
+    if galleryName is not None:
+        update_fields[models.Painting.galleryName] = galleryName
+    if pages is not None:    
+        update_fields[models.Painting.pages] = pages
+
+    if update_fields:
+        stmt = (
+            update(Painting)
+            .where(models.Painting.id == id)
+            .values(**update_fields)
+        )
+        session.execute(stmt)
+        session.commit()
+    return session.get(models.Painting, id)
 
 def search_paintings(
     db: Session,

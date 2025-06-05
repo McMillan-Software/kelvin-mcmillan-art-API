@@ -14,7 +14,6 @@ import schemas
 import service.painting_service as service
 import service.user_service as user_service
 import service.image_service as image_service
-import logging
 from models import User
 
 
@@ -56,18 +55,24 @@ def add_paintings(paintings: list[schemas.PaintingCreate], session: Session = De
     return created_paintings
 
 
-# UPDATE PAINTING
-@router.put("/painting/{id}", response_model=schemas.Painting)
-def update_painting(id: int, painting_update: schemas.PaintingCreate, session: Session = Depends(get_session)):
-   
-    print(f'Updating paitning with id: {id}')
 
-    painting = service.update_painting(session, id, painting_update)
-    if painting:
-        print(f'Painting successfully updated - id: {id}, title: {painting.title}')
-    else:
-        raise HTTPException(status_code=404, detail=f"painting with id {id} not found")
-    return painting
+@router.put("/painting/{id}", response_model=schemas.Painting)
+def edit_painting(id: int, painting_update: schemas.PaintingEdit, session: Session = Depends(get_session)):
+        return service.edit_painting(
+        session=session,
+        id=id,
+        title=painting_update.title,
+        type=painting_update.type,
+        width=painting_update.width,
+        height=painting_update.height,
+        sold=painting_update.sold,
+        framed=painting_update.framed,
+        price=painting_update.price,
+        info=painting_update.info,
+        galleryLink=painting_update.galleryLink,
+        galleryName=painting_update.galleryName,
+        page=painting_update.pages
+    )
 
 
 # DELETE BY ID
@@ -78,7 +83,6 @@ def delete_by_id(id: int, session: Session = Depends(get_session)):
     if painting:
         session.delete(painting)
         session.commit()
-        session.close()
     else:
         raise HTTPException(status_code=404, detail=f"painting with id {id} not found")
     
@@ -113,7 +117,6 @@ def add_giclee_dimensions(giclee_dimensions: list[schemas.GicleeOptionAttributeC
         session.commit()
         session.refresh(newDim)
         newDims.append(newDim)
-
     return newDims
 
 
@@ -126,20 +129,17 @@ def get_all_goa(session: Session = Depends(get_session),   aspect_ratio: str | N
         query = query.filter(models.GicleeOptionAttributes.aspect_ratio == aspect_ratio)
    
     results = query.all()
-    session.close()
     return results
 
 
 @router.get("/giclee/options", status_code=status.HTTP_200_OK)
 def get_all_giclee_options(session: Session = Depends(get_session)):
     options = session.query(models.GicleeOption).all()
-    session.close()
     return options
 
 @router.get("/aspectratios", status_code=status.HTTP_200_OK)
 def get_unique_aspect_ratios(session: Session = Depends(get_session)):
     unique_values = session.query(models.GicleeOptionAttributes.aspect_ratio).distinct().all() 
-    session.close()
     return [value[0] for value in unique_values] # check if it really needs to be this way
 
 @router.get("/giclee/{painting_id}/valid-options", status_code=status.HTTP_200_OK)

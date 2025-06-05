@@ -67,7 +67,7 @@ def get_portfolio_page(page: str, session: Session = Depends(get_session)):
     paintings = session.query(models.Painting).join(models.PageItem).filter(models.PageItem.page == page).all()
     if not paintings:
         raise HTTPException(status_code=404, detail=f"No paintings found for given page: {page}")
-
+    session.close()
     return paintings
 
 
@@ -78,4 +78,5 @@ def get_giclees(session: Session = Depends(get_session)):
     print('Getting giclees')
     giclees = service.get_giclees(session)
     print(f"giclees:{giclees}")
+    session.close()
     return giclees
