@@ -1,6 +1,6 @@
 from sqlalchemy import String
 import models
-import schemas
+import data_transfer_objects
 from sqlalchemy.orm import Session
 from sqlalchemy import update
 from sqlalchemy.orm import joinedload
@@ -20,7 +20,7 @@ def get_painting(session: Session, painting_id: int) -> models.Painting:
     return painting
 
 
-def add_painting(session: Session, painting: schemas.PaintingCreate) -> models.Painting:
+def add_painting(session: Session, painting: data_transfer_objects.PaintingCreate) -> models.Painting:
     print(f"adding painting: {painting.title}")
 
     newPainting = models.Painting(
@@ -71,12 +71,12 @@ def get_giclees(session: Session):
 
     return [map_giclee(giclee) for giclee in giclee_records]
 
-def map_giclee(giclee_model: models.Giclee) -> schemas.Giclee:
+def map_giclee(giclee_model: models.Giclee) -> data_transfer_objects.Giclee:
     #TODO: find a way to not explode if for some reason the related painting record can not be found.
-    return schemas.Giclee(
+    return data_transfer_objects.Giclee(
         painting_id=giclee_model.painting_id,
         page_order=giclee_model.page_order,
-        painting= schemas.Painting(
+        painting= data_transfer_objects.Painting(
             id=giclee_model.painting.id,
             title=giclee_model.painting.title,
             type=giclee_model.painting.type,
@@ -89,9 +89,9 @@ def map_giclee(giclee_model: models.Giclee) -> schemas.Giclee:
             aspect_ratio=giclee_model.painting.aspect_ratio
         ),
         options=[
-            schemas.GicleeOption(
+            data_transfer_objects.GicleeOption(
                 painting_id = giclee_model.painting_id,
-                option_attributes= schemas.GicleeOptionAttribute(
+                option_attributes= data_transfer_objects.GicleeOptionAttribute(
                     id = option.option_attributes.id,
                     width=option.option_attributes.width,
                     height=option.option_attributes.height,
@@ -104,7 +104,7 @@ def map_giclee(giclee_model: models.Giclee) -> schemas.Giclee:
 
 
 
-def add_giclee(session: Session, giclee: schemas.GicleeCreate):
+def add_giclee(session: Session, giclee: data_transfer_objects.GicleeCreate):
     
     # Get the Painting record
     print(f"adding giclee for painting with id: {giclee.painting_id}")
@@ -153,10 +153,10 @@ def get_option_schema_from_option_record(session: Session, record: models.Giclee
     goa_record = session.query(models.GicleeOptionAttributes).filter_by(id=record.option_attribute_id).first()
     print(f"Found goa record: {goa_record.id}")
 
-    option_schema = schemas.GicleeOption(
+    option_schema = data_transfer_objects.GicleeOption(
         id = record.id,
         painting_id=record.painting_id,
-        option_attributes= schemas.GicleeOptionAttribute(
+        option_attributes= data_transfer_objects.GicleeOptionAttribute(
             id = goa_record.id,
             width = goa_record.width,
             height = goa_record.height,
@@ -287,6 +287,7 @@ def edit_painting(
     session: Session,
     id: int,
     title: Optional[str] = None,
+    location: Optional[str] = None,
     type: Optional[str] = None,
     width: Optional[str] = None,
     height: Optional[str] = None,
@@ -300,27 +301,29 @@ def edit_painting(
 ) -> models.Painting:
     update_fields = {}
     if title is not None:
-        update_fields[models.Painting.title] = title
+        update_fields["title"] = title
+    if location is not None:
+        update_fields["location"] = location
     if type is not None:
-        update_fields[models.Painting.type] = type
+        update_fields["type"] = type
     if width is not None:
-        update_fields[models.Painting.width] = width
+        update_fields["width"] = width
     if height is not None:
-        update_fields[models.Painting.height] = height
+        update_fields["height"] = height
     if sold is not None:
-        update_fields[models.Painting.sold] = sold
+        update_fields["sold"] = sold
     if framed is not None:
-        update_fields[models.Painting.framed] = framed
+        update_fields["framed"] = framed
     if price is not None:
-        update_fields[models.Painting.price] = price
+        update_fields["price"] = price
     if info is not None:
-        update_fields[models.Painting.info] = info
+        update_fields["info"] = info
     if galleryLink is not None:
-        update_fields[models.Painting.galleryLink] = galleryLink
+        update_fields["galleryLink"] = galleryLink
     if galleryName is not None:
-        update_fields[models.Painting.galleryName] = galleryName
-    if pages is not None:    
-        update_fields[models.Painting.pages] = pages
+        update_fields["galleryName"] = galleryName
+    if pages is not None:
+        update_fields["pages"] = pages
 
     if update_fields:
         stmt = (
@@ -422,14 +425,14 @@ def get_valid_giclee_options_for_painting(session: Session, painting: models.Pai
     print(f"existing goa ids: {existing_goa_ids}")
 
     giclee_valid_options = [
-        schemas.GicleeValidOption(
+        data_transfer_objects.GicleeValidOption(
             option = opt,
             paintingHasOption= opt.id in existing_goa_ids
         )
         for opt in candidate_options
     ]
 
-    return schemas.GicleeValidOptions(
+    return data_transfer_objects.GicleeValidOptions(
         painting_id=painting.id,
         aspect_ratio= aspect_ratio,
         valid_options=giclee_valid_options

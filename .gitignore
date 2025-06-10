@@ -1,1 +1,4 @@
 kelvin.db
+__pycache__/*
+kelvinAPI/*
+*\__pycache__

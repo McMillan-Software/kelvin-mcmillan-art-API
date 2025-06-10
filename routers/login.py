@@ -7,7 +7,7 @@ from utils.hashing import verify_password
 from auth import create_access_token, get_current_user
 from fastapi.security import OAuth2PasswordRequestForm
 
-import schemas
+import data_transfer_objects
 import service.user_service as user_service
 from models import User
 
@@ -18,7 +18,7 @@ router = APIRouter(
 
 
 #Authentication
-@router.post("/login", response_model=schemas.Token)
+@router.post("/login", response_model=data_transfer_objects.Token)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(get_session)):
 
     user = user_service.get_user(session, form_data.username)
@@ -29,11 +29,11 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Session = D
     access_token = create_access_token(
          data={"sub": user.username}
      )
-    return schemas.Token(access_token=access_token, token_type="bearer")
+    return data_transfer_objects.Token(access_token=access_token, token_type="bearer")
 
 
 @router.post("/add-user", status_code=201)
-def add_user_endpoint(user: schemas.User, 
+def add_user_endpoint(user: data_transfer_objects.User, 
                       session: Session = Depends(get_session)):
     """
     Add a new user to the database using the user_service.

@@ -3,13 +3,13 @@ from database import get_session
 from sqlalchemy.orm import Session
 import service.painting_service as service
 import models
-import schemas
+import data_transfer_objects
 
 router = APIRouter()
 
 
 # GET ALL PAINTINGS
-@router.get("/paintings", response_model=list[schemas.Painting])
+@router.get("/paintings", response_model=list[data_transfer_objects.Painting])
 def get_all(session: Session = Depends(get_session)):
     paintings = session.query(models.Painting).all()
     session.close()
@@ -17,7 +17,7 @@ def get_all(session: Session = Depends(get_session)):
 
 
 # GET ALL ORIGINALS
-@router.get("/paintings/originals", response_model=list[schemas.Painting])
+@router.get("/paintings/originals", response_model=list[data_transfer_objects.Painting])
 def get_originals(session: Session = Depends(get_session)):
     paintings = session.query(models.Painting).filter(models.Painting.sold==False).all()
     session.close()
@@ -25,7 +25,7 @@ def get_originals(session: Session = Depends(get_session)):
 
 
 # GET ORIGINAL BY ID
-@router.get("/paintings/originals/{id}", response_model=schemas.Painting)
+@router.get("/paintings/originals/{id}", response_model=data_transfer_objects.Painting)
 def get_original_by_id(id: int, session: Session = Depends(get_session)):
     painting = session.query(models.Painting).get(id)
     if not painting:
@@ -38,7 +38,7 @@ def get_original_by_id(id: int, session: Session = Depends(get_session)):
     return painting
 
 # GET 5 PAINTINGS WITH HIGHEST IDs for home page
-@router.get("/paintings/home", response_model=list[schemas.Painting])
+@router.get("/paintings/home", response_model=list[data_transfer_objects.Painting])
 def get_home_paintings(session: Session = Depends(get_session)):
     paintings = session.query(models.Painting).filter(models.Painting.sold==False).order_by(models.Painting.id.desc()).limit(5).all()
     if not paintings:
@@ -50,7 +50,7 @@ def get_home_paintings(session: Session = Depends(get_session)):
 
 
 # GET BY ID
-@router.get("/paintings/{id}", response_model=schemas.Painting)
+@router.get("/paintings/{id}", response_model=data_transfer_objects.Painting)
 def get_by_id(id: int, session: Session = Depends(get_session)):
     painting = session.query(models.Painting).get(id)
 
@@ -62,7 +62,7 @@ def get_by_id(id: int, session: Session = Depends(get_session)):
 
 
 # GET PORTFOLIO PAGE
-@router.get("/paintings/portfolio/{page}", response_model=list[schemas.Painting])
+@router.get("/paintings/portfolio/{page}", response_model=list[data_transfer_objects.Painting])
 def get_portfolio_page(page: str, session: Session = Depends(get_session)):
     paintings = session.query(models.Painting).join(models.PageItem).filter(models.PageItem.page == page).all()
     if not paintings:
@@ -72,7 +72,7 @@ def get_portfolio_page(page: str, session: Session = Depends(get_session)):
 
 
 # GET GICLEES
-@router.get("/paintings/giclees/v2", response_model=list[schemas.Giclee] )
+@router.get("/paintings/giclees/v2", response_model=list[data_transfer_objects.Giclee] )
 def get_giclees(session: Session = Depends(get_session)):
 
     print('Getting giclees')
