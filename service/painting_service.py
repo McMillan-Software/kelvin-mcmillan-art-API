@@ -11,6 +11,7 @@ from sqlalchemy import or_, and_
 from typing import List, Optional
 from models import GicleeOption, Painting
 from pprint import pprint
+from exceptions import GicleeOptionNotFound
 
 
 def get_painting(session: Session, painting_id: int) -> models.Painting:
@@ -62,33 +63,6 @@ def add_painting(session: Session, painting: data_transfer_objects.PaintingCreat
 
 
 
-<<<<<<< HEAD
-# TODO: make sure it is correct to return the painting schema. Should schemas be used at the service layer? reverted to model. Getting unexpexcted error on painting not found
-def update_painting(session: Session, id: int, painting_update: schemas.PaintingCreate) -> models.Painting:
-
-    painting = session.query(models.Painting).get(id)
-
-    if painting:
-        print(f'Painting with id: {id} was found - title: {painting.title}')
-    else:
-        return None
-    
-    if painting.id == id:
-        # TODO: does it really need to be done like this? very manual why not something like: painting = painting_update 
-        painting.title = painting_update.title
-        painting.type = painting_update.type
-        painting.width = painting_update.width
-        painting.height = painting_update.height
-        painting.sold = painting_update.sold
-        painting.giclee = painting_update.giclee
-        painting.price = painting_update.price
-        painting.info = painting_update.info
-        session.commit()
-    return painting
-
-
-=======
->>>>>>> 4ccc648c0ec4fb8776ae3bb41fe1912a02aebd07
 def get_giclees(session: Session):
 
     giclee_records = session.query(models.Giclee).options(
@@ -102,25 +76,6 @@ def get_giclees(session: Session):
 
 def map_giclee(giclee_model: models.Giclee) -> data_transfer_objects.Giclee:
     #TODO: find a way to not explode if for some reason the related painting record can not be found.
-<<<<<<< HEAD
-     painting = giclee_model.painting
-     return schemas.Giclee(
-        painting_id=giclee_model.painting_id,
-        page_order=giclee_model.page_order,
-        painting=( 
-            schemas.Painting(
-                id=giclee_model.painting.id,
-                title=giclee_model.painting.title,
-                type=giclee_model.painting.type,
-                width=giclee_model.painting.width,
-                height=giclee_model.painting.height,
-                sold=giclee_model.painting.sold,
-                giclee=giclee_model.painting.giclee,
-                price=giclee_model.painting.price,
-                info=giclee_model.painting.info,
-                aspect_ratio=giclee_model.painting.aspect_ratio
-            ) if painting else None
-=======
     return data_transfer_objects.Giclee(
         painting_id=giclee_model.painting_id,
         page_order=giclee_model.page_order,
@@ -135,7 +90,6 @@ def map_giclee(giclee_model: models.Giclee) -> data_transfer_objects.Giclee:
             price=giclee_model.painting.price,
             info=giclee_model.painting.info,
             aspect_ratio=giclee_model.painting.aspect_ratio
->>>>>>> 4ccc648c0ec4fb8776ae3bb41fe1912a02aebd07
         ),
         options=[
             data_transfer_objects.GicleeOption(
@@ -182,10 +136,7 @@ def add_giclee(session: Session, giclee: data_transfer_objects.GicleeCreate):
     else: 
         new_options_records = create_giclee_options_from_list(session, painting.id, giclee.goa_ids) 
 
-
     print(f"Created Option records: {new_options_records}")
-    session.commit()
-    print("DB changes comitted")
     return new_options_records
 
 
@@ -481,15 +432,9 @@ def get_valid_giclee_options_for_painting(session: Session, painting: models.Pai
     print(f"existing goa ids: {existing_goa_ids}")
 
     giclee_valid_options = [
-<<<<<<< HEAD
-        schemas.GicleeValidOption(
+       data_transfer_objects.GicleeValidOption(
             attributes = opt,
             painting_has_option= opt.id in existing_goa_ids
-=======
-        data_transfer_objects.GicleeValidOption(
-            option = opt,
-            paintingHasOption= opt.id in existing_goa_ids
->>>>>>> 4ccc648c0ec4fb8776ae3bb41fe1912a02aebd07
         )
         for opt in candidate_options
     ]
@@ -516,3 +461,4 @@ def delete_giclee_option(session: Session, painting_id: int, option_attribute_id
         session.delete(option)
     else: 
         print(f'Unable to delete, unable to find a giclee option for painting_id:{painting_id} and option_attribute_if: {option_attribute_id}')
+        raise GicleeOptionNotFound(f'Unable to delete, unable to find a giclee option for painting_id:{painting_id} and option_attribute_if: {option_attribute_id}')
