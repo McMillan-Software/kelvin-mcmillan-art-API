@@ -11,11 +11,10 @@ from auth import get_current_user
 from exceptions import GicleeOptionNotFound
 from models import Painting 
 import models
-import schemas
+import data_transfer_objects
 import service.painting_service as service
 import service.user_service as user_service
 import service.image_service as image_service
-import logging
 from models import User
 
 
@@ -28,9 +27,11 @@ router = APIRouter(
 
 #Paintings
 
+
+
 # INSERT SINGLE PAINTING
-@router.post("/painting", status_code=status.HTTP_201_CREATED, response_model=schemas.Painting)
-def add_painting(painting: schemas.PaintingCreate, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
+@router.post("/painting", status_code=status.HTTP_201_CREATED, response_model=data_transfer_objects.Painting)
+def add_painting(painting: data_transfer_objects.PaintingCreate, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
     return service.add_painting(session, painting)
 
 
@@ -47,8 +48,8 @@ def upload_image(id: int, file: Annotated[UploadFile, File(...)], session: Sessi
 
 
 # INSERT MULTIPLE PAINTINGS
-@router.post("/paintings", status_code=status.HTTP_201_CREATED, response_model=list[schemas.Painting])
-def add_paintings(paintings: list[schemas.PaintingCreate], session: Session = Depends(get_session)):
+@router.post("/paintings", status_code=status.HTTP_201_CREATED, response_model=list[data_transfer_objects.Painting])
+def add_paintings(paintings: list[data_transfer_objects.PaintingCreate], session: Session = Depends(get_session)):
     created_paintings = []
 
     for painting in paintings:
@@ -57,29 +58,35 @@ def add_paintings(paintings: list[schemas.PaintingCreate], session: Session = De
     return created_paintings
 
 
-# UPDATE PAINTING
-@router.put("/painting/{id}", response_model=schemas.Painting)
-def update_painting(id: int, painting_update: schemas.PaintingCreate, session: Session = Depends(get_session)):
-   
-    print(f'Updating paitning with id: {id}')
 
-    painting = service.update_painting(session, id, painting_update)
-    if painting:
-        print(f'Painting successfully updated - id: {id}, title: {painting.title}')
-    else:
-        raise HTTPException(status_code=404, detail=f"painting with id {id} not found")
-    return painting
+@router.put("/painting/{id}", response_model=data_transfer_objects.Painting)
+def edit_painting(id: int, painting_update: data_transfer_objects.Painting, session: Session = Depends(get_session)):
+        return service.edit_painting(
+        session=session,
+        id=id,
+        title=painting_update.title,
+        location=painting_update.location,
+        type=painting_update.type,
+        width=painting_update.width,
+        height=painting_update.height,
+        sold=painting_update.sold,
+        framed=painting_update.framed,
+        price=painting_update.price,
+        info=painting_update.info,
+        galleryLink=painting_update.galleryLink,
+        galleryName=painting_update.galleryName,
+        pages=painting_update.pages
+    )
 
 
 # DELETE BY ID
-@router.delete("/paintings/{id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/painting/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_by_id(id: int, session: Session = Depends(get_session)):
     painting = session.query(models.Painting).get(id)
 
     if painting:
         session.delete(painting)
         session.commit()
-        session.close()
     else:
         raise HTTPException(status_code=404, detail=f"painting with id {id} not found")
     
@@ -90,8 +97,8 @@ def delete_by_id(id: int, session: Session = Depends(get_session)):
 #Giclee 
 
 # ADD single or many Giclees for exisitng painting
-@router.post("/giclee", status_code=status.HTTP_201_CREATED, response_model=list[schemas.GicleeOption])
-def add_giclee(giclee: schemas.GicleeCreate, session: Session = Depends(get_session)):
+@router.post("/giclee", status_code=status.HTTP_201_CREATED, response_model=list[data_transfer_objects.GicleeOption])
+def add_giclee(giclee: data_transfer_objects.GicleeCreate, session: Session = Depends(get_session)):
     print(f"Adding giclee for paiting with id: {giclee.painting_id}. goa_id(s): {giclee.goa_ids}")
     return service.add_giclee(session, giclee)
 
@@ -110,8 +117,8 @@ def delete_giclee_option(painting_id: int, option_attribute_id: int, session: Se
 
 
 # Add giclee price/size row
-@router.post("/giclee/dimensions", status_code=status.HTTP_201_CREATED, response_model=list[schemas.GicleeOptionAttribute])
-def add_giclee_dimensions(giclee_dimensions: list[schemas.GicleeOptionAttributeCreate], session: Session = Depends(get_session)):
+@router.post("/giclee/dimensions", status_code=status.HTTP_201_CREATED, response_model=list[data_transfer_objects.GicleeOptionAttribute])
+def add_giclee_dimensions(giclee_dimensions: list[data_transfer_objects.GicleeOptionAttributeCreate], session: Session = Depends(get_session)):
 
     newDims = []
 
@@ -127,12 +134,11 @@ def add_giclee_dimensions(giclee_dimensions: list[schemas.GicleeOptionAttributeC
         session.commit()
         session.refresh(newDim)
         newDims.append(newDim)
-
     return newDims
 
 
 # get GOA
-@router.get("/giclee/dimensions", status_code=status.HTTP_200_OK, response_model=list[schemas.GicleeOptionAttribute])
+@router.get("/giclee/dimensions", status_code=status.HTTP_200_OK, response_model=list[data_transfer_objects.GicleeOptionAttribute])
 def get_all_goa(session: Session = Depends(get_session),   aspect_ratio: str | None = None):
     query = session.query(models.GicleeOptionAttributes)
 
@@ -140,20 +146,17 @@ def get_all_goa(session: Session = Depends(get_session),   aspect_ratio: str | N
         query = query.filter(models.GicleeOptionAttributes.aspect_ratio == aspect_ratio)
    
     results = query.all()
-    session.close()
     return results
 
 
 @router.get("/giclee/options", status_code=status.HTTP_200_OK)
 def get_all_giclee_options(session: Session = Depends(get_session)):
     options = session.query(models.GicleeOption).all()
-    session.close()
     return options
 
 @router.get("/aspectratios", status_code=status.HTTP_200_OK)
 def get_unique_aspect_ratios(session: Session = Depends(get_session)):
     unique_values = session.query(models.GicleeOptionAttributes.aspect_ratio).distinct().all() 
-    session.close()
     return [value[0] for value in unique_values] # check if it really needs to be this way
 
 @router.get("/giclee/{painting_id}/valid-options", 
@@ -195,7 +198,7 @@ def get_valid_giclee_options_for_painting(
 
 
 
-@router.get("/paintings",status_code=status.HTTP_200_OK, response_model=List[schemas.Painting])
+@router.get("/paintings",status_code=status.HTTP_200_OK, response_model=List[data_transfer_objects.Painting])
 def get_paintings(
     db: Session = Depends(get_session),
     q: Optional[str] = Query(None, description="Multple string contains"),

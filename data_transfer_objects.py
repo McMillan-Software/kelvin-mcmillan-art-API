@@ -5,19 +5,6 @@ class KelvBase(BaseModel) :
     class Config: 
         orm_mode = True
 
-# includes fields exclusiveto orginals
-class PaintingCreate (KelvBase) : 
-    title: str
-    type: str
-    width: int
-    height: int
-    sold: bool
-    framed: bool
-    price: Optional[float] = None
-    info: str
-    galleryLink: Optional[str] = None
-    galleryName: Optional[str] = None
-    pages: Optional[List[str]] = None
 
 # for returning a basic painting object
 class Painting (KelvBase) : 
@@ -36,6 +23,8 @@ class Painting (KelvBase) :
     galleryName: Optional[str] = None
     galleryLink: Optional[str] = None
     image_path: Optional[str] = None
+    pages: Optional[List[str]] = None
+
 
 class PageItem (KelvBase):
     id: int
@@ -43,7 +32,19 @@ class PageItem (KelvBase):
     painting_id: int
     page_order: int
 
-
+# includes fields exclusiveto orginals
+class PaintingCreate (KelvBase) : 
+    title: str
+    type: str
+    width: int
+    height: int
+    sold: bool
+    framed: bool
+    price: Optional[float] = None
+    info: str
+    galleryLink: Optional[str] = None
+    galleryName: Optional[str] = None
+    pages: Optional[List[str]] = None
 
 
 # GICLEE

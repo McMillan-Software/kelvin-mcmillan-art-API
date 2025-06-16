@@ -1,11 +1,11 @@
 import string
 import models
-import schemas
+import data_transfer_objects
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from utils.hashing import hash_password
 
-def add_user(session: Session, user: schemas.User) -> models.User:
+def add_user(session: Session, user: data_transfer_objects.User) -> models.User:
     print(f"Creating new user: {user.username}")
 
     # Check if the user already exists
