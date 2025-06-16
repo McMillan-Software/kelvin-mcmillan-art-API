@@ -8,6 +8,7 @@ from typing import Annotated, List, Optional
 from pathlib import Path
 from auth import get_current_user
 
+from exceptions import GicleeOptionNotFound
 from models import Painting 
 import models
 import schemas
@@ -95,6 +96,19 @@ def add_giclee(giclee: schemas.GicleeCreate, session: Session = Depends(get_sess
     return service.add_giclee(session, giclee)
 
 
+# DELETE giclee option
+@router.delete("/giclee")
+def delete_giclee_option(painting_id: int, option_attribute_id: int, session: Session = Depends(get_session)):
+    print(f"Deleting giclee option for painting_id: {painting_id}, giclee_option_id: {option_attribute_id} ")
+
+    try:
+        service.delete_giclee_option(session, painting_id, option_attribute_id)
+        session.commit()
+        return {"detail": "Deleted Successfully"}
+    except GicleeOptionNotFound as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
 # Add giclee price/size row
 @router.post("/giclee/dimensions", status_code=status.HTTP_201_CREATED, response_model=list[schemas.GicleeOptionAttribute])
 def add_giclee_dimensions(giclee_dimensions: list[schemas.GicleeOptionAttributeCreate], session: Session = Depends(get_session)):
@@ -142,12 +156,19 @@ def get_unique_aspect_ratios(session: Session = Depends(get_session)):
     session.close()
     return [value[0] for value in unique_values] # check if it really needs to be this way
 
-@router.get("/giclee/{painting_id}/valid-options", status_code=status.HTTP_200_OK)
-def get_valid_giclee_options_for_painting(paitning_id: int,  session: Session = Depends(get_session), aspect_ratio: str | None = None): 
+@router.get("/giclee/{painting_id}/valid-options", 
+            status_code=status.HTTP_200_OK,
+            summary="Returns valid giclee and which options have already been added.",
+            description="While aspect_ratio has not been set for the painting, any exisitng aspect ratio can be provided" \
+            "Once the aspect ratio has been set on the painting, as aspect_ratio does not have to be provided but passing in a different aspect ratio will result in an error." \
+            "If neither apect_ratio on the painting, or an aspect_ratio provided, currently no options will be returned.")
+def get_valid_giclee_options_for_painting(
+                                            painting_id: int,  
+                                            session: Session = Depends(get_session), aspect_ratio: str | None = None): 
     
-    print(f"Getting valid giclee options for painting_id: {paitning_id}")
+    print(f"Getting valid giclee options for painting_id: {painting_id}")
 
-    painting = session.query(models.Painting).filter(models.Painting.id == paitning_id).first()
+    painting = session.query(models.Painting).filter(models.Painting.id == painting_id).first()
     if painting is None:
         raise HTTPException(status_code=404, detail=f"painting with id {id} not found")
 
@@ -158,7 +179,7 @@ def get_valid_giclee_options_for_painting(paitning_id: int,  session: Session = 
     if aspect_ratio is not None and painting_aspect_ratio is not None:
         
         if aspect_ratio != painting_aspect_ratio:
-            raise HTTPException(status_code=401, detail=f"Painting aspect ratio has already been set to {painting_aspect_ratio}")
+            raise HTTPException(status_code=400, detail=f"Painting aspect ratio has already been set to {painting_aspect_ratio}")
 
 
 

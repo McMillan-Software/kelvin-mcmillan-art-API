@@ -84,13 +84,13 @@ class GicleeCreate(KelvBase):
 
 
 class GicleeValidOption(KelvBase): 
-    paintingHasOption: bool
-    option: GicleeOptionAttribute
+    painting_has_option: bool
+    attributes: GicleeOptionAttribute
 
 
 class GicleeValidOptions(KelvBase):
     painting_id: int
-    aspect_ratio: str
+    aspect_ratio: Optional[str]
     valid_options: List[GicleeValidOption]
 
 

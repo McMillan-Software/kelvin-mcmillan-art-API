@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_
 from typing import List, Optional
-from models import Painting
+from models import GicleeOption, Painting
 from pprint import pprint
 
 
@@ -57,7 +57,6 @@ def add_painting(session: Session, painting: schemas.PaintingCreate) -> models.P
     
 # Could now add giclee if giclee is true and giclee options are also not null.
     session.commit()
-    session.close()
     return newPainting
 
 
@@ -83,10 +82,6 @@ def update_painting(session: Session, id: int, painting_update: schemas.Painting
         painting.price = painting_update.price
         painting.info = painting_update.info
         session.commit()
-
-    # TODO: isn't there automatic handling of session closing implemented somewhere...? Some flows do not close
-    # TODO: wheres the commit...? Is it automatic
-    session.close()
     return painting
 
 
@@ -97,24 +92,29 @@ def get_giclees(session: Session):
         joinedload(models.Giclee.options).joinedload(models.GicleeOption.option_attributes) 
     ).all()
 
+    print(f'number of giclee records: {len(giclee_records)}')
+
     return [map_giclee(giclee) for giclee in giclee_records]
 
 def map_giclee(giclee_model: models.Giclee) -> schemas.Giclee:
     #TODO: find a way to not explode if for some reason the related painting record can not be found.
-    return schemas.Giclee(
+     painting = giclee_model.painting
+     return schemas.Giclee(
         painting_id=giclee_model.painting_id,
         page_order=giclee_model.page_order,
-        painting= schemas.Painting(
-            id=giclee_model.painting.id,
-            title=giclee_model.painting.title,
-            type=giclee_model.painting.type,
-            width=giclee_model.painting.width,
-            height=giclee_model.painting.height,
-            sold=giclee_model.painting.sold,
-            giclee=giclee_model.painting.giclee,
-            price=giclee_model.painting.price,
-            info=giclee_model.painting.info,
-            aspect_ratio=giclee_model.painting.aspect_ratio
+        painting=( 
+            schemas.Painting(
+                id=giclee_model.painting.id,
+                title=giclee_model.painting.title,
+                type=giclee_model.painting.type,
+                width=giclee_model.painting.width,
+                height=giclee_model.painting.height,
+                sold=giclee_model.painting.sold,
+                giclee=giclee_model.painting.giclee,
+                price=giclee_model.painting.price,
+                info=giclee_model.painting.info,
+                aspect_ratio=giclee_model.painting.aspect_ratio
+            ) if painting else None
         ),
         options=[
             schemas.GicleeOption(
@@ -165,7 +165,6 @@ def add_giclee(session: Session, giclee: schemas.GicleeCreate):
     print(f"Created Option records: {new_options_records}")
     session.commit()
     print("DB changes comitted")
-    session.close()
     return new_options_records
 
 
@@ -382,11 +381,18 @@ def search_paintings(
 def get_valid_giclee_options_for_painting(session: Session, painting: models.Painting, aspect_ratio: str): 
     print(f"getting valid giclee_options for paiting: {painting.title}, aspect_ratio: {aspect_ratio}")
 
+    # TODO: this requires aspect ratio so the endpoint cannot function without aspect ratio, this needs a rethink. 
+   
+   
+    # Also having the aspect ratio set on the paitning appears to not be working 
+    # looks like this is working now...
+    
     candidate_options = session.query(models.GicleeOptionAttributes).filter(models.GicleeOptionAttributes.aspect_ratio == aspect_ratio).all()
 
 
+
     for opt in candidate_options:
-        pprint({k: v for k, v in vars(opt).items() if not k.startswith("_")})
+        pprint({k: v for k, v in vars( ).items() if not k.startswith("_")})
 
      
     giclee = painting.child_giclee
@@ -403,8 +409,8 @@ def get_valid_giclee_options_for_painting(session: Session, painting: models.Pai
 
     giclee_valid_options = [
         schemas.GicleeValidOption(
-            option = opt,
-            paintingHasOption= opt.id in existing_goa_ids
+            attributes = opt,
+            painting_has_option= opt.id in existing_goa_ids
         )
         for opt in candidate_options
     ]
@@ -414,3 +420,20 @@ def get_valid_giclee_options_for_painting(session: Session, painting: models.Pai
         aspect_ratio= aspect_ratio,
         valid_options=giclee_valid_options
     )
+
+
+def delete_giclee_option(session: Session, painting_id: int, option_attribute_id: int): 
+
+    option = (
+        session.query(GicleeOption).filter(
+        GicleeOption.painting_id == painting_id,
+        GicleeOption.option_attribute_id == option_attribute_id
+        )
+    .first()
+    )
+
+    if option: 
+        print(f'Deleteing Giclee Option for: painting_id:{painting_id}, option_attribute_if: {option_attribute_id}')
+        session.delete(option)
+    else: 
+        print(f'Unable to delete, unable to find a giclee option for painting_id:{painting_id} and option_attribute_if: {option_attribute_id}')
