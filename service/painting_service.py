@@ -433,7 +433,9 @@ def get_valid_giclee_options_for_painting(session: Session, painting: models.Pai
 
     giclee_valid_options = [
        data_transfer_objects.GicleeValidOption(
-            attributes = opt,
+            # pydantic 2.8+ opt is an ORM object and will not automatically convert to a DTO
+            # pydantic object config is not enough here due to nesting:  model_config = {"from_attributes": True}
+            attributes = data_transfer_objects.GicleeOptionAttribute.model_validate(opt, from_attributes=True), 
             painting_has_option= opt.id in existing_goa_ids
         )
         for opt in candidate_options

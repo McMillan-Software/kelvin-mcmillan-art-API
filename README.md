@@ -1,11 +1,44 @@
 # Kelvin McMillan Art API 
 
-## Running the Application locally:
+
+
+## 🔧 First Time Setup Instructions
+
+## 1. Create virtual environment and Activate (only first time)
+
+   On Windows PowerShell:
+
+   ``` powershell
+   python -m venv venv 
+   .\venv\Scripts\Activate.ps1
+   ```
+
+Terminal should look something like: 
+    ```
+    (venv) PS C:\Users\Angus\git\kelvin-mcmillan-art-API>
+    ```
+## 2. Install Dedpendencies (venv active)
+```
+    pip install -r requirements.txt
+```
+
+## venv and vscode
+
+    vscode should detect and offer to automatically link the venv to the project so you do not need to activate every time
+
+
+
+
+### Running the Application locally: (venv active)
 ```
 uvicorn main:app --reload
 ```
 
+
+
 ## Technologies
+
+# see requirements.text
 
 ### API framework:
 pip install fastapi
