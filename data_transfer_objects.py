@@ -104,9 +104,13 @@ class GicleeValidOptions(KelvBase):
 #Token for authentication
 class Token(KelvBase):
     access_token: str
+    refresh_token: str
     token_type: str
 
 #For logging in
 class User(KelvBase):
     username: str
     password: str
+
+class RefreshTokenRequest(KelvBase):
+    refresh_token: str
