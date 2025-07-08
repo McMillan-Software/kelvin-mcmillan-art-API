@@ -4,7 +4,7 @@ from database import get_session
 from sqlalchemy.orm import Session
 
 from utils.hashing import verify_password
-from auth import create_access_token, get_current_user
+from auth import create_access_token, create_refresh_token, get_current_user, refresh_tokens
 from fastapi.security import OAuth2PasswordRequestForm
 
 import data_transfer_objects
@@ -28,8 +28,12 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Session = D
 
     access_token = create_access_token(
          data={"sub": user.username}
-     )
-    return data_transfer_objects.Token(access_token=access_token, token_type="bearer")
+    )
+    refresh_token = create_refresh_token(
+        data={"sub": user.username}
+    )
+
+    return data_transfer_objects.Token(access_token=access_token, refresh_token=refresh_token, token_type="bearer")
 
 
 @router.post("/add-user", status_code=201)
@@ -52,4 +56,23 @@ def validate_token(current_user: User = Depends(get_current_user)):
     """
     Validate the token and ensure the user is authenticated.
     """
+    # wheres the validation?!?! It seems to work right? 
     return {"message": "Token is valid", "username": current_user.username}
+
+
+@router.post("/refresh", response_model=data_transfer_objects.Token)
+def refresh_token(request: data_transfer_objects.RefreshTokenRequest, session: Session = Depends(get_session)):
+    """
+    Issue a new token set from a refresh token
+    """
+    access_token, refresh_token = refresh_tokens(request.refresh_token, session)
+
+    return data_transfer_objects.Token(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        token_type="bearer"
+    )
+
+
+
+    
