@@ -162,7 +162,7 @@ def get_unique_aspect_ratios(session: Session = Depends(get_session)):
 @router.get("/giclee/{painting_id}/valid-options", 
             status_code=status.HTTP_200_OK,
             summary="Returns valid giclee and which options have already been added.",
-            description="While aspect_ratio has not been set for the painting, any exisitng aspect ratio can be provided" \
+            description="While aspect_ratio has not been set for the painting, any exisitng aspect ratio can be provided" 
             "Once the aspect ratio has been set on the painting, as aspect_ratio does not have to be provided but passing in a different aspect ratio will result in an error." \
             "If neither apect_ratio on the painting, or an aspect_ratio provided, currently no options will be returned.")
 def get_valid_giclee_options_for_painting(
