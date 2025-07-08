@@ -5,5 +5,7 @@ kelvinAPI/Include/site/python3.12/greenlet/greenlet.h
 kelvinAPI/lib/site-packages/*
 kelvinAPI/Scripts/*
 kelvinAPI/pyvenv.cfg
-.gitignore
+venv/
+
+
 

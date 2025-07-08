@@ -3,7 +3,9 @@ from typing import Optional, List
 
 class KelvBase(BaseModel) : 
     class Config: 
-        orm_mode = True
+         model_config = {
+        "from_attributes": True
+    }
 
 
 # for returning a basic painting object
