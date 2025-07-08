@@ -56,7 +56,6 @@ def validate_token(current_user: User = Depends(get_current_user)):
     """
     Validate the token and ensure the user is authenticated.
     """
-    # wheres the validation?!?! It seems to work right? 
     return {"message": "Token is valid", "username": current_user.username}
 
 
