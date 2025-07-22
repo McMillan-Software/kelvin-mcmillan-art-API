@@ -52,7 +52,7 @@ class Giclee(Base):
     painting = relationship ("Painting", back_populates="child_giclee", uselist=False, lazy="joined") # 'eager loaded'
 
     # Giclee --> GicleeOption, 1:N
-    options = relationship("GicleeOption", back_populates="parent_giclee_painting")
+    options = relationship("GicleeOption", back_populates="parent_giclee_painting", lazy="joined")
 
 
 

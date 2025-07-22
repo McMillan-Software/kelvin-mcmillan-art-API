@@ -1,12 +1,10 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
 
-class KelvBase(BaseModel) : 
-    class Config: 
-         model_config = {
+class KelvBase(BaseModel):
+    model_config = {
         "from_attributes": True
     }
-
 
 # for returning a basic painting object
 class Painting (KelvBase) : 
@@ -61,6 +59,7 @@ class GicleeOptionAttribute(KelvBase):
 
 # doesn't not include GicleeOption.id for some reason
 class GicleeOption(KelvBase):
+    id: int
     painting_id: int
     option_attributes: GicleeOptionAttribute #= Field(..., alias="parent_attributes")
 
@@ -84,7 +83,7 @@ class GicleeCreate(KelvBase):
     goa_ids: Optional[List[int]] # when creating, provide a list of GOA ids
     create_all_for_aspect_ratio: Optional[bool] # if true, create a giclee option record for each avaialable dim as long as size is amaller then original size
 
-
+    
 
 class GicleeValidOption(KelvBase): 
     painting_has_option: bool

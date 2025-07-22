@@ -136,9 +136,10 @@ def add_giclee(session: Session, giclee: data_transfer_objects.GicleeCreate):
     else: 
         new_options_records = create_giclee_options_from_list(session, painting.id, giclee.goa_ids) 
 
-    print(f"Created Option records: {new_options_records}")
-    return new_options_records
-
+    return [
+        data_transfer_objects.GicleeOption.model_validate(option)
+        for option in new_options_records
+    ]
 
 # TODO: does not declare returning anything? 
 def get_option_schema_from_option_record(session: Session, record: models.GicleeOption):
@@ -233,8 +234,13 @@ def create_giclee_options_from_list(session: Session, painting_id: int, goa_ids:
             painting_id=painting_id,
         )
         session.add(newGicleeOption)
+        session.flush()  # ensure `id` is assigned
+
+        # Load relationships so that `option_attributes` is available for DTO conversion
+        session.refresh(newGicleeOption)  # refresh from DB (fills id and relationships)
         created_options.append(newGicleeOption)
 
+    session.commit()
     return created_options
 
 
@@ -412,8 +418,6 @@ def get_valid_giclee_options_for_painting(session: Session, painting: models.Pai
     # looks like this is working now...
     
     candidate_options = session.query(models.GicleeOptionAttributes).filter(models.GicleeOptionAttributes.aspect_ratio == aspect_ratio).all()
-
-
 
     for opt in candidate_options:
         pprint({k: v for k, v in vars( ).items() if not k.startswith("_")})

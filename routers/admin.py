@@ -27,8 +27,6 @@ router = APIRouter(
 
 #Paintings
 
-
-
 # INSERT SINGLE PAINTING
 @router.post("/painting", status_code=status.HTTP_201_CREATED, response_model=data_transfer_objects.Painting)
 def add_painting(painting: data_transfer_objects.PaintingCreate, session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
@@ -174,7 +172,7 @@ def get_valid_giclee_options_for_painting(
     painting = session.query(models.Painting).filter(models.Painting.id == painting_id).first()
     if painting is None:
         raise HTTPException(status_code=404, detail=f"painting with id {id} not found")
-
+    
 
     painting_aspect_ratio = painting.aspect_ratio
 
