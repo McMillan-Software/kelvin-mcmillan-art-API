@@ -94,6 +94,7 @@ def map_giclee(giclee_model: models.Giclee) -> data_transfer_objects.Giclee:
         options=[
             data_transfer_objects.GicleeOption(
                 painting_id = giclee_model.painting_id,
+                id = option.id,
                 option_attributes= data_transfer_objects.GicleeOptionAttribute(
                     id = option.option_attributes.id,
                     width=option.option_attributes.width,
