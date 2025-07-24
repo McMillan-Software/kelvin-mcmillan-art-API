@@ -25,6 +25,12 @@ class Painting (KelvBase) :
     image_path: Optional[str] = None
     pages: Optional[List[str]] = None
 
+#Pages
+
+class Page (KelvBase):
+    id: int
+    name: str
+
 
 class PageItem (KelvBase):
     id: int
@@ -44,7 +50,7 @@ class PaintingCreate (KelvBase) :
     info: str
     galleryLink: Optional[str] = None
     galleryName: Optional[str] = None
-    pages: Optional[List[str]] = None
+    pages: Optional[List[int]] = None
 
 
 # GICLEE

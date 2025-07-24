@@ -233,3 +233,9 @@ def get_paintings(
         sort_by=sort_by,
         sort_order=sort_order,
     )
+
+#Page
+
+@router.get("/pages",status_code=status.HTTP_200_OK,response_model=List[data_transfer_objects.Page])
+def get_pages( db: Session = Depends(get_session)):
+    return service.get_pages(db)

@@ -8,6 +8,7 @@ from fastapi import HTTPException
 
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_
+from sqlalchemy import func
 from typing import List, Optional
 from models import GicleeOption, Painting
 from pprint import pprint
@@ -54,14 +55,16 @@ def add_painting(session: Session, painting: data_transfer_objects.PaintingCreat
 # Create page item records
     if painting.pages:
         for page in painting.pages:
-            new_page_item = models.PageItem(page=page, page_order=1, painting_id=newPainting.id)
+            new_page_item = models.PageItem(page_id=page, page_order=get_next_page_order(session, page), painting_id=newPainting.id)
             session.add(new_page_item)
     
 # Could now add giclee if giclee is true and giclee options are also not null.
     session.commit()
     return newPainting
 
-
+def get_next_page_order(session, page_id: int) -> int:
+    max_order = session.query(func.max(models.PageItem.page_order)).filter_by(page_id=page_id).scalar()
+    return (max_order or 0) + 1
 
 def get_giclees(session: Session):
 
@@ -469,3 +472,7 @@ def delete_giclee_option(session: Session, painting_id: int, option_attribute_id
     else: 
         print(f'Unable to delete, unable to find a giclee option for painting_id:{painting_id} and option_attribute_if: {option_attribute_id}')
         raise GicleeOptionNotFound(f'Unable to delete, unable to find a giclee option for painting_id:{painting_id} and option_attribute_if: {option_attribute_id}')
+    
+
+def get_pages(session: Session):
+    return session.query(models.Page).all()
