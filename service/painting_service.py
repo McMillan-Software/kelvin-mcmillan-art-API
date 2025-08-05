@@ -44,22 +44,18 @@ def add_painting(session: Session, painting: data_transfer_objects.PaintingCreat
     if painting.price is not None:
         newPainting.price = painting.price
 
-    # add to db
     session.add(newPainting)
-    session.commit() # need to generate the id field for related record creation\
-    # TODO: investigate why we commit here and then again below
+    session.flush()  # Get painting.id without committing
     session.refresh(newPainting)
     print(f"the id for the new painting: {newPainting.id}")
 
-# Handle related record creation
-# Create page item records
     if painting.pages:
-        for page in painting.pages:
-            new_page_item = models.PageItem(page_id=page, page_order=get_next_page_order(session, page), painting_id=newPainting.id)
-            session.add(new_page_item)
-    
-# Could now add giclee if giclee is true and giclee options are also not null.
-    session.commit()
+        for page_id in painting.pages:
+            new_page_item = models.PageItem(
+                page_id=page_id,
+                page_order=get_next_page_order(session, page_id),
+            )
+            newPainting.page_items.append(new_page_item)
     return newPainting
 
 def get_next_page_order(session, page_id: int) -> int:
