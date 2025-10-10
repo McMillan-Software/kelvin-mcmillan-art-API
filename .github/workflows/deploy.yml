@@ -30,11 +30,11 @@ jobs:
         EC2_HOST: ${{ secrets.EC2_HOST }}
       run: |
         # Create a temporary file for the SSH key
-        echo "$SSH_PRIVATE_KEY" > ssh_key.pem
-        chmod 600 ssh_key.pem
+        echo "$SSH_PRIVATE_KEY" > ssh_key
+        chmod 600 ssh_key
 
         # Use the temporary SSH key file to connect to the EC2 instance
-        ssh -i ssh_key.pem ubuntu@$EC2_HOST 'bash /home/ubuntu/deployment-scripts/deploy_backend.sh'
+        ssh -i ssh_key -o StrictHostKeyChecking=no ubuntu@$EC2_HOST 'bash /home/ubuntu/deployment-scripts/deploy_backend.sh'
 
         # Clean up the temporary SSH key file
-        rm ssh_key.pem
+        rm ssh_key
