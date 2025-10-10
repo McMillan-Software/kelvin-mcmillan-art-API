@@ -29,4 +29,4 @@ jobs:
         SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
         EC2_HOST: ${{ secrets.EC2_HOST }}
       run: |
-        ssh -i $EC2_SSH_KEY ec2-user@$EC2_HOST 'bash -s' < deploy_script.sh
+        ssh -i $EC2_SSH_KEY ubuntu@$EC2_HOST 'bash -s' < /home/ubuntu/deployment-scripts/deploy_backend.sh
