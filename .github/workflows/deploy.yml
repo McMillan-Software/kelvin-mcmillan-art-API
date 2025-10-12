@@ -37,10 +37,10 @@ jobs:
         ssh -i ssh_key -o StrictHostKeyChecking=no ubuntu@$EC2_HOST 'bash /home/ubuntu/deployment-scripts/deploy_backend.sh'
 
         # Copy NGINX configuration to EC2
-        scp -i ssh_key -o StrictHostKeyChecking=no ./config/nginx/backend.conf ubuntu@$EC2_HOST:/etc/nginx/sites-available/
+        scp -i ssh_key -o StrictHostKeyChecking=no ./config/nginx/backend-nginx.conf ubuntu@$EC2_HOST:/etc/nginx/sites-available/
 
         # Enable the NGINX configuration
-        ssh -i ssh_key -o StrictHostKeyChecking=no ubuntu@$EC2_HOST 'sudo ln -sf /etc/nginx/sites-available/backend.conf /etc/nginx/sites-enabled/backend.conf'
+        ssh -i ssh_key -o StrictHostKeyChecking=no ubuntu@$EC2_HOST 'sudo ln -sf /etc/nginx/sites-available/backend.conf /etc/nginx/sites-enabled/backend-nginx.conf'
 
         # Test NGINX configuration
         ssh -i ssh_key -o StrictHostKeyChecking=no ubuntu@$EC2_HOST 'sudo nginx -t'
