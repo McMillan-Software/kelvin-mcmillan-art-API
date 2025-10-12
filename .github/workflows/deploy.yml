@@ -33,8 +33,20 @@ jobs:
         echo "$SSH_PRIVATE_KEY" > ssh_key
         chmod 600 ssh_key
 
-        # Use the temporary SSH key file to connect to the EC2 instance
+        # Run deployment script 
         ssh -i ssh_key -o StrictHostKeyChecking=no ubuntu@$EC2_HOST 'bash /home/ubuntu/deployment-scripts/deploy_backend.sh'
+
+        # Copy NGINX configuration to EC2
+        scp -i ssh_key -o StrictHostKeyChecking=no ./config/nginx/backend.conf ubuntu@$EC2_HOST:/etc/nginx/sites-available/
+
+        # Enable the NGINX configuration
+        ssh -i ssh_key -o StrictHostKeyChecking=no ubuntu@$EC2_HOST 'sudo ln -sf /etc/nginx/sites-available/backend.conf /etc/nginx/sites-enabled/backend.conf'
+
+        # Test NGINX configuration
+        ssh -i ssh_key -o StrictHostKeyChecking=no ubuntu@$EC2_HOST 'sudo nginx -t'
+
+        # Reload NGINX
+        ssh -i ssh_key -o StrictHostKeyChecking=no ubuntu@$EC2_HOST 'sudo systemctl reload nginx'
 
         # Clean up the temporary SSH key file
         rm ssh_key
