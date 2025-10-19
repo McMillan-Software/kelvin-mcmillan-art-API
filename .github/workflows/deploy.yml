@@ -38,7 +38,7 @@ jobs:
         host: ${{ secrets.EC2_HOST }}
         username: ubuntu
         key: ${{ secrets.EC2_SSH_KEY }}
-        source: "config/nginx/backend-nginx.conf"
+        source: "config/nginx/backend-locations.conf"
         target: "/home/ubuntu/temp-nginx/"
 
     - name: Configure NGINX
