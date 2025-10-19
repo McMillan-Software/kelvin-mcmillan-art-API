@@ -26,7 +26,7 @@ app.add_middleware(
 )
 
 
-app.include_router(web.router)
-app.include_router(admin.router)
-app.include_router(login.router)
-
+# Add /api prefix to all routes
+app.include_router(web.router, prefix="/api")
+app.include_router(admin.router, prefix="/api")
+app.include_router(login.router, prefix="/api")
