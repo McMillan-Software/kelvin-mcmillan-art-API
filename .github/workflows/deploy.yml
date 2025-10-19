@@ -1,10 +1,9 @@
-
 name: Deploy FastAPI to EC2
 
 on:
   push:
     branches:
-      - main  # Trigger the workflow on pushes to the main branch
+      - main
 
 jobs:
   deploy:
@@ -12,41 +11,44 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: '3.12'
 
-    - name: Install dependencies # not required as we currently do not run tests
+    - name: Install dependencies # NOT NEEDED? 
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Deploy to EC2 # dependencies installed in the deployment script in this step.
-      env:
-        SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-        EC2_HOST: ${{ secrets.EC2_HOST }}
-      run: |
-        # Create a temporary file for the SSH key
-        echo "$SSH_PRIVATE_KEY" > ssh_key
-        chmod 600 ssh_key
+    - name: Deploy application
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ubuntu
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+          bash /home/ubuntu/deployment-scripts/deploy_backend.sh
 
-        # Run deployment script 
-        ssh -i ssh_key -o StrictHostKeyChecking=no ubuntu@$EC2_HOST 'bash /home/ubuntu/deployment-scripts/deploy_backend.sh'
+    - name: Copy NGINX config to EC2 temp folder
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ubuntu
+        key: ${{ secrets.EC2_SSH_KEY }}
+        source: "config/nginx/backend-nginx.conf"
+        target: "/home/ubuntu/temp-nginx/"
 
-        # Copy NGINX configuration to EC2
-        scp -i ssh_key -o StrictHostKeyChecking=no ./config/nginx/backend-nginx.conf ubuntu@$EC2_HOST:/etc/nginx/sites-available/
-
-        # Enable the NGINX configuration
-        ssh -i ssh_key -o StrictHostKeyChecking=no ubuntu@$EC2_HOST 'sudo ln -sf /etc/nginx/sites-available/backend.conf /etc/nginx/sites-enabled/backend-nginx.conf'
-
-        # Test NGINX configuration
-        ssh -i ssh_key -o StrictHostKeyChecking=no ubuntu@$EC2_HOST 'sudo nginx -t'
-
-        # Reload NGINX
-        ssh -i ssh_key -o StrictHostKeyChecking=no ubuntu@$EC2_HOST 'sudo systemctl reload nginx'
-
-        # Clean up the temporary SSH key file
-        rm ssh_key
+    - name: Configure NGINX
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ubuntu
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+          sudo mv /home/ubuntu/temp-nginx/config/nginx/backend-nginx.conf /etc/nginx/sites-available/backend-nginx.conf
+          sudo ln -sf /etc/nginx/sites-available/backend-nginx.conf /etc/nginx/sites-enabled/
+          sudo nginx -t
+          sudo systemctl reload nginx
