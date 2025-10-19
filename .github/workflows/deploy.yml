@@ -48,7 +48,6 @@ jobs:
         username: ubuntu
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
-          sudo mv /home/ubuntu/temp-nginx/config/nginx/backend-nginx.conf /etc/nginx/sites-available/backend-nginx.conf
-          sudo ln -sf /etc/nginx/sites-available/backend-nginx.conf /etc/nginx/sites-enabled/
+          sudo mv /home/ubuntu/temp-nginx/config/nginx/backend-locations.conf /etc/nginx/sites-available/backend-locations.conf
           sudo nginx -t
           sudo systemctl reload nginx
