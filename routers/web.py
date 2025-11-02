@@ -40,7 +40,7 @@ def get_original_by_id(id: int, session: Session = Depends(get_session)):
 # GET 5 PAINTINGS WITH HIGHEST IDs for home page
 @router.get("/paintings/home", response_model=list[data_transfer_objects.Painting])
 def get_home_paintings(session: Session = Depends(get_session)):
-    paintings = session.query(models.Painting).filter(models.Painting.sold==False).order_by(models.Painting.id.desc()).limit(5).all()
+    paintings = session.query(models.Painting).filter(models.Painting.sold==False).order_by(models.Painting.id.desc()).limit(50).all()
     if not paintings:
         raise HTTPException(status_code=404, detail="No paintings found")
     
