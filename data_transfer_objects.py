@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 
 class KelvBase(BaseModel):
@@ -113,3 +113,10 @@ class User(KelvBase):
 
 class RefreshTokenRequest(KelvBase):
     refresh_token: str
+
+
+# Customer Inquiry
+class Inquiry(KelvBase):
+    name: str
+    email: str
+    message: str

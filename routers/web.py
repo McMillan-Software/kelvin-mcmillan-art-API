@@ -2,6 +2,7 @@ from fastapi import HTTPException, Depends, APIRouter
 from database import get_session
 from sqlalchemy.orm import Session
 import service.painting_service as service
+import service.mail_service as mail_service
 import models
 import data_transfer_objects
 
@@ -40,7 +41,7 @@ def get_original_by_id(id: int, session: Session = Depends(get_session)):
 # GET 5 PAINTINGS WITH HIGHEST IDs for home page
 @router.get("/paintings/home", response_model=list[data_transfer_objects.Painting])
 def get_home_paintings(session: Session = Depends(get_session)):
-    paintings = session.query(models.Painting).filter(models.Painting.sold==False).order_by(models.Painting.id.desc()).limit(5).all()
+    paintings = session.query(models.Painting).filter(models.Painting.sold==False).order_by(models.Painting.id.desc()).limit(50).all()
     if not paintings:
         raise HTTPException(status_code=404, detail="No paintings found")
     
@@ -80,3 +81,16 @@ def get_giclees(session: Session = Depends(get_session)):
     print(f"giclees:{giclees}")
     session.close()
     return giclees
+
+# Customer Inquirie email
+@router.post("/painting/inquiry", response_model=None, status_code=200)
+def send_customer_inquiry_email(inquiry: data_transfer_objects.Inquiry):
+    result = mail_service.send_contact_email(inquiry.name, inquiry.email, inquiry.message)
+    if result:
+        return {"status": "success", "message": "Email sent successfully"}
+        
+    # If it fails, raise a proper HTTP exception
+    raise HTTPException(
+        status_code=500,
+        detail="Failed to send email. Please try again later."
+    )
