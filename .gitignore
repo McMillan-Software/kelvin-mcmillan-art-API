@@ -6,6 +6,6 @@ kelvinAPI/lib/site-packages/*
 kelvinAPI/Scripts/*
 kelvinAPI/pyvenv.cfg
 venv/
-
+.env
 
 
