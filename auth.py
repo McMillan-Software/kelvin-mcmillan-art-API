@@ -8,8 +8,12 @@ from service.user_service import get_user
 from database import get_session
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
+from pathlib import Path
 
-load_dotenv()
+base_dir = Path(__file__).resolve().parent
+env_path = base_dir / ".env"
+
+load_dotenv(dotenv_path=env_path)
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM", "HS256") 
