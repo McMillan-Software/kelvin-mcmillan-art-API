@@ -19,7 +19,7 @@ class Painting (KelvBase) :
     giclee: bool
     price: float
     info: str
-    aspect_ratio: Optional[str] = None
+    aspect_ratio: Optional[float] = None
     galleryName: Optional[str] = None
     galleryLink: Optional[str] = None
     image_path: Optional[str] = None
@@ -52,9 +52,9 @@ class PaintingCreate (KelvBase) :
 # return types
 class GicleeOptionAttribute(KelvBase): 
     id: int
+    aspect_ratio: float
     width: int
     height: int
-    aspect_ratio: str
     price: int
 
 # doesn't not include GicleeOption.id for some reason
@@ -74,7 +74,7 @@ class Giclee(KelvBase):
 class GicleeOptionAttributeCreate(KelvBase): 
     width: int
     height: int
-    aspect_ratio: str
+    aspect_ratio: float
     price: int
 
 class GicleeCreate(KelvBase):

@@ -78,9 +78,9 @@ class GicleeOption(Base):
 class GicleeOptionAttributes(Base):
     __tablename__='giclee_option_attributes'
     id = Column(Integer, primary_key=True)
+    aspect_ratio = Column(Float)
     width = Column(Integer)
     height = Column(Integer)
-    aspect_ratio = Column(String)
     price = Column(Integer)
 
     # GicleeOptionAttributes --> GicleeOption, 1:N
