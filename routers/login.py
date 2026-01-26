@@ -64,6 +64,7 @@ def refresh_token(request: data_transfer_objects.RefreshTokenRequest, session: S
     """
     Issue a new token set from a refresh token
     """
+    print("Router: refreshing token")
     access_token, refresh_token = refresh_tokens(request.refresh_token, session)
 
     return data_transfer_objects.Token(

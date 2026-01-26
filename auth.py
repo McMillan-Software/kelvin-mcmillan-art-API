@@ -29,7 +29,7 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(days=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
@@ -47,7 +47,7 @@ def create_refresh_token(data: dict, expires_delta: timedelta = None):
 
 def get_current_user(session: Session = Depends(get_session), token: str = Depends(oauth2_scheme)) -> models.User:
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
         username: str = payload.get("sub")
         
         if username is None:
@@ -71,10 +71,11 @@ def get_current_user(session: Session = Depends(get_session), token: str = Depen
             status_code=401,
             detail="Invalid token",
         )
-    except jwt.InvalidSignatureError:
+    except jwt.ExpiredSignatureError:
         raise HTTPException(
-            status_code=401,
-            detail="Invalid token signature",
+            status_code=401, 
+            detail="Token has expired",
+            headers={"WWW-Authenticate": "Bearer"},
         )
     
 
