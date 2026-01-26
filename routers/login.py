@@ -36,22 +36,22 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Session = D
     return data_transfer_objects.Token(access_token=access_token, refresh_token=refresh_token, token_type="bearer")
 
 
-@router.post("/add-user", status_code=201)
-def add_user_endpoint(user: data_transfer_objects.User, 
-                      session: Session = Depends(get_session),
-                      current_user: User = Depends(get_current_user)):
-    """
-    Add a new user to the database using the user_service.
-    """
-    print(f"Adding new user: {user.username} by user: {current_user.username}")
+# @router.post("/add-user", status_code=201)
+# def add_user_endpoint(user: data_transfer_objects.User, 
+#                       session: Session = Depends(get_session),
+#                       current_user: User = Depends(get_current_user)):
+#     """
+#     Add a new user to the database using the user_service.
+#     """
+#     print(f"Adding new user: {user.username} by user: {current_user.username}")
 
-    try:
-        new_user = user_service.add_user(session, user)
-        return {"message": f"User {new_user.username} added successfully."}
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+#     try:
+#         new_user = user_service.add_user(session, user)
+#         return {"message": f"User {new_user.username} added successfully."}
+#     except HTTPException as e:
+#         raise e
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
     
 
 @router.get("/validate-authentication", status_code=200)
