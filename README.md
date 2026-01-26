@@ -33,6 +33,13 @@ uvicorn main:app --reload
 ```
 
 
+## Creating users: 
+
+create users by running script: 
+```
+python create_user_script.py <username> <password>
+```
+
 ## Technologies
 
 # see requirements.text
