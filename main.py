@@ -4,8 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers import web, admin, login
 
 
-# Create the database
-Base.metadata.create_all(engine)
+# # Create the database
+Base.metadata.create_all(bind=engine)
 
 # Initialize app
 app = FastAPI()

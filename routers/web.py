@@ -65,7 +65,14 @@ def get_by_id(id: int, session: Session = Depends(get_session)):
 # GET PORTFOLIO PAGE
 @router.get("/paintings/portfolio/{page}", response_model=list[data_transfer_objects.Painting])
 def get_portfolio_page(page: str, session: Session = Depends(get_session)):
-    paintings = session.query(models.Painting).join(models.PageItem).filter(models.PageItem.page == page).all()
+    paintings = (
+    session.query(models.Painting)
+    .join(models.Painting.page_items)
+    .join(models.PageItem.page)
+    .filter(models.Page.name == page)
+    .order_by(models.PageItem.page_order.asc())
+    .all()
+    )
     if not paintings:
         raise HTTPException(status_code=404, detail=f"No paintings found for given page: {page}")
     session.close()

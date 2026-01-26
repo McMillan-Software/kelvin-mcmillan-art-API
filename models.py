@@ -1,6 +1,7 @@
 
 from sqlalchemy import  Column, Integer, String, Boolean, Float, ForeignKey, UniqueConstraint
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from typing import List
 from database import Base
 
 
@@ -21,24 +22,30 @@ class Painting(Base):
     galleryName = Column(String, nullable=True)
     galleryLink = Column(String, nullable=True)
     image_path = Column(String, nullable=True)
-
-    # Painting --> PageItem, 1:N
-    page_items = relationship("PageItem", back_populates="painting")
     
     # Painting --> Giclee, 1:1
     child_giclee = relationship("Giclee", back_populates="painting", uselist=False)
+
+    page_items: Mapped[List["PageItem"]] = relationship(back_populates="painting")
 
 
 
 class PageItem(Base):
     __tablename__ = 'page_items'
-    id = Column(Integer, primary_key=True)
-    page = Column(String(256))
-    painting_id = Column(Integer, ForeignKey('paintings.id'))
-    page_order = Column(Integer)
+    painting_id: Mapped[int] = mapped_column(ForeignKey("paintings.id"), primary_key=True)
+    page_id: Mapped[int] = mapped_column(ForeignKey("pages.id"), primary_key=True)
+    page_order: Mapped[int] = mapped_column(Integer)
 
-   # PageItem <-- Painting, N:1
-    painting = relationship("Painting", back_populates="page_items")
+    painting: Mapped["Painting"] = relationship(back_populates="page_items")
+    page: Mapped["Page"] = relationship(back_populates="page_items")
+
+
+class Page(Base):
+    __tablename__= 'pages'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String)
+
+    page_items: Mapped[List["PageItem"]] = relationship(back_populates="page")
 
 
 
@@ -78,9 +85,9 @@ class GicleeOption(Base):
 class GicleeOptionAttributes(Base):
     __tablename__='giclee_option_attributes'
     id = Column(Integer, primary_key=True)
+    aspect_ratio = Column(Float)
     width = Column(Integer)
     height = Column(Integer)
-    aspect_ratio = Column(String)
     price = Column(Integer)
 
     # GicleeOptionAttributes --> GicleeOption, 1:N
