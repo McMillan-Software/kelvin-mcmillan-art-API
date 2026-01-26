@@ -7,5 +7,4 @@ kelvinAPI/Scripts/*
 kelvinAPI/pyvenv.cfg
 venv/
 .env
-
-
+kelvin.db
