@@ -1,18 +1,26 @@
 from datetime import datetime, timedelta, timezone
 import jwt
 import models
+import os
 from fastapi import HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer
 from service.user_service import get_user
 from database import get_session
 from sqlalchemy.orm import Session
+from dotenv import load_dotenv
+from pathlib import Path
 
-from jose import ExpiredSignatureError, JWTError
+base_dir = Path(__file__).resolve().parent
+env_path = base_dir / ".env"
 
-SECRET_KEY = "mcmi11@ns0ftwar3"  
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-REFRESH_TOKEN_EXPIRE_DAYS = 7
+load_dotenv(dotenv_path=env_path)
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY not found! Check your .env file path.")
+ALGORITHM = os.getenv("ALGORITHM", "HS256") 
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
+REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", 7))
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/authentication/login") 
 
@@ -58,16 +66,6 @@ def get_current_user(session: Session = Depends(get_session), token: str = Depen
             )
         
         return user
-    except ExpiredSignatureError:
-        raise HTTPException(
-            status_code=401,
-            detail="Token has expired",
-        )
-    except JWTError:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid authentication credentials",
-        )
     except jwt.DecodeError:
         raise HTTPException(
             status_code=401,
@@ -86,10 +84,11 @@ def refresh_tokens(refresh_token: str, session: Session) -> tuple[str, str]:
         username = payload.get("sub")
         if username is None:
             raise HTTPException(status_code=401, detail="Invalid refresh token")
-    except ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Refresh token expired")
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid refresh token")
+        
+    except jwt.ExpiredSignatureError: 
+        raise HTTPException(status_code=401, detail="Token has expired")
+    except jwt.PyJWTError: 
+        raise HTTPException(status_code=401, detail="Invalid token")
 
     new_access_token = create_access_token({"sub": username})
     new_refresh_token = create_refresh_token({"sub": username})
