@@ -33,6 +33,24 @@ uvicorn main:app --reload
 ```
 
 
+## Creating users: 
+
+
+
+activate venv if not already:
+```
+source venv/bin/activate
+```
+
+create users by running script
+```
+python create_user_script.py <username> <password>
+```
+or depending on python version/if aliased 
+```
+python3 create_user_script.py <username> <password>
+```
+
 ## Technologies
 
 # see requirements.text
