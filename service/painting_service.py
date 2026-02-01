@@ -56,6 +56,8 @@ def add_painting(session: Session, painting: data_transfer_objects.PaintingCreat
                 page_order=get_next_page_order(session, page_id),
             )
             newPainting.page_items.append(new_page_item)
+    session.commit()
+    session.refresh(newPainting)
     return newPainting
 
 def get_next_page_order(session, page_id: int) -> int:

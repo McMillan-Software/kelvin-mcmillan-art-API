@@ -47,6 +47,8 @@ def create_refresh_token(data: dict, expires_delta: timedelta = None):
 
 def get_current_user(session: Session = Depends(get_session), token: str = Depends(oauth2_scheme)) -> models.User:
     try:
+        print(f"Retrieving username from token")
+        
         payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
         username: str = payload.get("sub")
         
@@ -55,7 +57,6 @@ def get_current_user(session: Session = Depends(get_session), token: str = Depen
                 status_code=401,
                 detail="Invalid token: missing username",
             )
-        print(f"Retrieving user: {username}")
         
         # Fetch the user from the database
         user = get_user(session, username)
