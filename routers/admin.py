@@ -36,6 +36,8 @@ def add_painting(painting: data_transfer_objects.PaintingCreate, session: Sessio
 # Add image to painting
 @router.post("/painting/{id}/image", status_code=status.HTTP_201_CREATED)
 def upload_image(id: int, file: Annotated[UploadFile, File(...)], session: Session = Depends(get_session), current_user: User = Depends(get_current_user)):
+    print(f"Uploading Image for Painting: {id}")
+
     if Path(file.filename).suffix.lower() not in {".jpg", ".jpeg", ".png"}:
         raise HTTPException(status_code=400)
     painting = service.get_painting(session, id)

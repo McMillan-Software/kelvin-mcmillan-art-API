@@ -11,6 +11,7 @@ def upload_image(file: UploadFile, title: String, painting_type: String) -> Stri
     s3 = boto3.client('s3')
     file_name = generate_file_path(title, file.filename, painting_type)
     s3.upload_fileobj(file.file, 'kelvin-mcmillan-images', file_name)
+    print(f"Sucessfully uploaded image to AWS with filename: {file_name}")
     return file_name
 
 

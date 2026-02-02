@@ -16,6 +16,7 @@ from exceptions import GicleeOptionNotFound
 
 
 def get_painting(session: Session, painting_id: int) -> models.Painting:
+    print(f"Retrieving painting: {painting_id}")
     painting = session.query(models.Painting).get(painting_id)
     if painting is None:
         raise HTTPException(status_code=404, detail=f"no painting found with given id: {painting_id}")
