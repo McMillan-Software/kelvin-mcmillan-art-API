@@ -91,7 +91,8 @@ def map_giclee(giclee_model: models.Giclee) -> data_transfer_objects.Giclee:
             giclee=giclee_model.painting.giclee,
             price=giclee_model.painting.price,
             info=giclee_model.painting.info,
-            aspect_ratio=giclee_model.painting.aspect_ratio
+            aspect_ratio=giclee_model.painting.aspect_ratio,
+            image_path=giclee_model.painting.image_path
         ),
         options=[
             data_transfer_objects.GicleeOption(
