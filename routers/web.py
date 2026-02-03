@@ -32,9 +32,6 @@ def get_original_by_id(id: int, session: Session = Depends(get_session)):
     if not painting:
         raise HTTPException(status_code=404, detail=f"no painting found with given id: {id}")
 
-    if painting.sold:
-        raise HTTPException(status_code=400,
-                            detail=f"painting {id} - {painting.title} was found but is not available as an original")
     session.close()
     return painting
 
