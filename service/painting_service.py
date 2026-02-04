@@ -38,6 +38,8 @@ def add_painting(session: Session, painting: data_transfer_objects.PaintingCreat
     )
 
     # handle optional fields
+    if painting.location is not None:
+        newPainting.location = painting.location
     if painting.galleryLink is not None:
         newPainting.galleryLink = painting.galleryLink
     if painting.galleryName is not None:

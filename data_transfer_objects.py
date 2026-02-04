@@ -41,6 +41,7 @@ class PageItem (KelvBase):
 # includes fields exclusiveto orginals
 class PaintingCreate (KelvBase) : 
     title: str
+    location: Optional[str] = None
     type: str
     width: int
     height: int
