@@ -43,8 +43,8 @@ def upload_image(id: int, file: Annotated[UploadFile, File(...)], session: Sessi
     painting = service.get_painting(session, id)
     image_path = image_service.upload_image(file, painting.title, painting.type)
     service.add_image_path(session, painting.id, image_path)
-
-    return {"filename": image_path}
+    imagePath = image_path
+    return {"filename": imagePath}
 
 
 # INSERT MULTIPLE PAINTINGS
@@ -65,6 +65,7 @@ def edit_painting(id: int, painting_update: data_transfer_objects.Painting, sess
         session=session,
         id=id,
         title=painting_update.title,
+        creation_date=painting_update.creation_date,
         location=painting_update.location,
         type=painting_update.type,
         width=painting_update.width,
@@ -73,8 +74,8 @@ def edit_painting(id: int, painting_update: data_transfer_objects.Painting, sess
         framed=painting_update.framed,
         price=painting_update.price,
         info=painting_update.info,
-        galleryLink=painting_update.galleryLink,
-        galleryName=painting_update.galleryName,
+        gallery_link=painting_update.gallery_link,
+        gallery_name=painting_update.gallery_name,
         pages=painting_update.pages
     )
 

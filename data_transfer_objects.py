@@ -1,10 +1,16 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict
+from pydantic.alias_generators import to_camel
 from typing import Optional, List
+from datetime import date
 
 class KelvBase(BaseModel):
-    model_config = {
-        "from_attributes": True
-    }
+    model_config = ConfigDict(
+        from_attributes=True,
+        
+        alias_generator=to_camel,
+        
+        populate_by_name=True
+    )
 
 # for returning a basic painting object
 class Painting (KelvBase) : 
@@ -12,6 +18,7 @@ class Painting (KelvBase) :
     title: str
     location: Optional[str] = None
     type: str
+    creation_date: Optional[date] = None
     width: int
     height: int
     sold: bool
@@ -20,8 +27,8 @@ class Painting (KelvBase) :
     price: float
     info: str
     aspect_ratio: Optional[float] = None
-    galleryName: Optional[str] = None
-    galleryLink: Optional[str] = None
+    gallery_name: Optional[str] = None
+    gallery_link: Optional[str] = None
     image_path: Optional[str] = None
     pages: Optional[List[str]] = None
 
@@ -42,6 +49,7 @@ class PageItem (KelvBase):
 class PaintingCreate (KelvBase) : 
     title: str
     location: Optional[str] = None
+    creation_date: Optional[date] = None
     type: str
     width: int
     height: int
@@ -49,8 +57,8 @@ class PaintingCreate (KelvBase) :
     framed: bool
     price: Optional[float] = None
     info: str
-    galleryLink: Optional[str] = None
-    galleryName: Optional[str] = None
+    gallery_link: Optional[str] = None
+    gallery_name: Optional[str] = None
     pages: Optional[List[int]] = None
 
 
