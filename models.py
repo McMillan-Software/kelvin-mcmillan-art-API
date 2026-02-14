@@ -1,5 +1,5 @@
 
-from sqlalchemy import  Column, Integer, String, Boolean, Float, ForeignKey, UniqueConstraint
+from sqlalchemy import  Column, Integer, String, Boolean, Float, ForeignKey, UniqueConstraint, Date
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import List
 from database import Base
@@ -11,6 +11,7 @@ class Painting(Base):
     title = Column(String(256), unique=True)
     location = Column(String(256))
     type = Column(String, nullable=False)
+    creation_date = Column(Date, nullable=True)
     width = Column(Integer, nullable=False)
     height = Column(Integer, nullable=False)
     sold = Column(Boolean, nullable=False)
@@ -19,8 +20,8 @@ class Painting(Base):
     price = Column(Float)
     info = Column(String)
     aspect_ratio = Column(String, nullable=True)
-    galleryName = Column(String, nullable=True)
-    galleryLink = Column(String, nullable=True)
+    gallery_name = Column(String, nullable=True)
+    gallery_link = Column(String, nullable=True)
     image_path = Column(String, nullable=True)
     
     # Painting --> Giclee, 1:1

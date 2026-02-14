@@ -1,6 +1,7 @@
 from sqlalchemy import String
 import models
 import data_transfer_objects
+from sqlalchemy import Date
 from sqlalchemy.orm import Session
 from sqlalchemy import update
 from sqlalchemy.orm import joinedload
@@ -34,14 +35,18 @@ def add_painting(session: Session, painting: data_transfer_objects.PaintingCreat
         sold = painting.sold,
         framed = painting.framed,
         price = painting.price,
-        info = painting.info
+        info = painting.info,
     )
 
     # handle optional fields
-    if painting.galleryLink is not None:
-        newPainting.galleryLink = painting.galleryLink
-    if painting.galleryName is not None:
-        newPainting.galleryName = painting.galleryName
+    if painting.location is not None:
+        newPainting.location = painting.location
+    if painting.creation_date is not None:
+        newPainting.creation_date = painting.creation_date    
+    if painting.gallery_link is not None:
+        newPainting.gallery_link = painting.gallery_link
+    if painting.gallery_name is not None:
+        newPainting.gallery_name = painting.gallery_name
     if painting.price is not None:
         newPainting.price = painting.price
 
@@ -297,6 +302,7 @@ def edit_painting(
     session: Session,
     id: int,
     title: Optional[str] = None,
+    creation_date: Optional[Date] = None,
     location: Optional[str] = None,
     type: Optional[str] = None,
     width: Optional[str] = None,
@@ -305,13 +311,15 @@ def edit_painting(
     framed: Optional[bool] = None,
     price: Optional[float] = None,
     info: Optional[str] = None,
-    galleryLink: Optional[str] = None,
-    galleryName: Optional[str] = None,
+    gallery_link: Optional[str] = None,
+    gallery_name: Optional[str] = None,
     pages: Optional[List[str]] = None
 ) -> models.Painting:
     update_fields = {}
     if title is not None:
         update_fields["title"] = title
+    if creation_date is not None:
+        update_fields["creation_date"] = creation_date    
     if location is not None:
         update_fields["location"] = location
     if type is not None:
@@ -328,12 +336,10 @@ def edit_painting(
         update_fields["price"] = price
     if info is not None:
         update_fields["info"] = info
-    if galleryLink is not None:
-        update_fields["galleryLink"] = galleryLink
-    if galleryName is not None:
-        update_fields["galleryName"] = galleryName
-    if pages is not None:
-        update_fields["pages"] = pages
+    if gallery_link is not None:
+        update_fields["gallery_link"] = gallery_link
+    if gallery_name is not None:
+        update_fields["gallery_name"] = gallery_name
 
     if update_fields:
         stmt = (
