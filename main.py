@@ -2,7 +2,13 @@ from fastapi import FastAPI
 from database import Base, engine
 from fastapi.middleware.cors import CORSMiddleware
 from routers import web, admin, login
+import logging
 
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 
 # # Create the database
 Base.metadata.create_all(bind=engine)

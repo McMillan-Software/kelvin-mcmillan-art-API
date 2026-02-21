@@ -5,6 +5,9 @@ import service.painting_service as service
 import service.mail_service as mail_service
 import models
 import data_transfer_objects
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -28,10 +31,11 @@ def get_originals(session: Session = Depends(get_session)):
 # GET ORIGINAL BY ID
 @router.get("/paintings/originals/{id}", response_model=data_transfer_objects.Painting)
 def get_original_by_id(id: int, session: Session = Depends(get_session)):
+
     painting = session.query(models.Painting).get(id)
     if not painting:
         raise HTTPException(status_code=404, detail=f"no painting found with given id: {id}")
-
+    
     session.close()
     return painting
 
@@ -50,12 +54,18 @@ def get_home_paintings(session: Session = Depends(get_session)):
 # GET BY ID
 @router.get("/paintings/{id}", response_model=data_transfer_objects.Painting)
 def get_by_id(id: int, session: Session = Depends(get_session)):
+
+    logger.info(f"Getting painting by id: {id}")
+
     painting = session.query(models.Painting).get(id)
 
     if not painting:
         raise HTTPException(status_code=404, detail=f"painting with id {id} not found")
 
     session.close()
+
+    logger.info(f"Returning painting of id: {id}: {painting.aspect_ratio}")
+
     return painting
 
 
