@@ -15,8 +15,10 @@ import data_transfer_objects
 import service.painting_service as service
 import service.user_service as user_service
 import service.image_service as image_service
+import logging
 from models import User
 
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/admin",
@@ -58,10 +60,13 @@ def add_paintings(paintings: list[data_transfer_objects.PaintingCreate], session
     return created_paintings
 
 
-
+# UPDATE PAINTING
 @router.put("/painting/{id}", response_model=data_transfer_objects.Painting)
 def edit_painting(id: int, painting_update: data_transfer_objects.Painting, session: Session = Depends(get_session)):
-        return service.edit_painting(
+        
+        logger.info(f"Editing painting {id}: {painting_update.model_dump_json()}")
+        
+        updated_painting = service.edit_painting(
         session=session,
         id=id,
         title=painting_update.title,
@@ -74,10 +79,14 @@ def edit_painting(id: int, painting_update: data_transfer_objects.Painting, sess
         framed=painting_update.framed,
         price=painting_update.price,
         info=painting_update.info,
+        aspect_ratio = painting_update.aspect_ratio,
         gallery_link=painting_update.gallery_link,
         gallery_name=painting_update.gallery_name,
-        pages=painting_update.pages
+        pages=painting_update.pages    
     )
+        
+        logger.info(f"Updated painting {id}: {painting_update.model_dump_json()}")
+        return updated_painting
 
 
 # DELETE BY ID
@@ -170,27 +179,22 @@ def get_valid_giclee_options_for_painting(
                                             painting_id: int,  
                                             session: Session = Depends(get_session), aspect_ratio: str | None = None): 
     
-    print(f"Getting valid giclee options for painting_id: {painting_id}")
+    logger.info(f"Getting valid giclee options for painting_id: {painting_id}, aspect ratio parameter value: {aspect_ratio}")
 
     painting = session.query(models.Painting).filter(models.Painting.id == painting_id).first()
     if painting is None:
         raise HTTPException(status_code=404, detail=f"painting with id {id} not found")
     
-
     painting_aspect_ratio = painting.aspect_ratio
-
-    # If an aspect_ratio was provided and the paiting aspect_ratio was already set, these values must match or there are no valid options
-    if aspect_ratio is not None and painting_aspect_ratio is not None:
+    logger.info(f"Painting has an aspect_ratio set to: {painting.aspect_ratio}")
+    
+    # TODO: delete this thiscondtion is almost certainly no londer desireable
+    # # If an aspect_ratio was provided and the paiting aspect_ratio was already set, these values must match or there are no valid options
+    # if aspect_ratio is not None and painting_aspect_ratio is not None:
         
-        if aspect_ratio != painting_aspect_ratio:
-            raise HTTPException(status_code=400, detail=f"Painting aspect ratio has already been set to {painting_aspect_ratio}")
+    if painting_aspect_ratio != "" and aspect_ratio != painting_aspect_ratio:
+        raise HTTPException(status_code=400, detail=f"Painting aspect ratio has already been set to {painting_aspect_ratio}")
 
-
-
-    # if painting aspect_ratio has not been set, one must be provided on the request to find valid options:
-    # or just return a list of EVERYTHING...?  
-    # if painting_aspect_ratio is None and aspect_ratio is None: 
-    #     raise HTTPException(status_code=401, detail=f"The painting aspect_ratio has not been set, an aspect ratio must be provided")
 
     if aspect_ratio is None:
         aspect_ratio = painting_aspect_ratio

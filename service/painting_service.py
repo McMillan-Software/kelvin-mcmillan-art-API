@@ -5,7 +5,7 @@ from sqlalchemy import Date
 from sqlalchemy.orm import Session
 from sqlalchemy import update
 from sqlalchemy.orm import joinedload
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_
@@ -14,7 +14,10 @@ from typing import List, Optional
 from models import GicleeOption, Painting
 from pprint import pprint
 from exceptions import GicleeOptionNotFound
+import logging
 
+
+logger = logging.getLogger(__name__)
 
 def get_painting(session: Session, painting_id: int) -> models.Painting:
     print(f"Retrieving painting: {painting_id}")
@@ -311,10 +314,18 @@ def edit_painting(
     framed: Optional[bool] = None,
     price: Optional[float] = None,
     info: Optional[str] = None,
+    aspect_ratio: Optional[str] = None,
     gallery_link: Optional[str] = None,
     gallery_name: Optional[str] = None,
     pages: Optional[List[str]] = None
 ) -> models.Painting:
+   
+   
+    if aspect_ratio is not None: 
+        validate_aspect_ratio_change(id, aspect_ratio, session)
+   
+   
+   
     update_fields = {}
     if title is not None:
         update_fields["title"] = title
@@ -336,6 +347,8 @@ def edit_painting(
         update_fields["price"] = price
     if info is not None:
         update_fields["info"] = info
+    if aspect_ratio is not None:
+        update_fields["aspect_ratio"] = aspect_ratio
     if gallery_link is not None:
         update_fields["gallery_link"] = gallery_link
     if gallery_name is not None:
@@ -349,7 +362,9 @@ def edit_painting(
         )
         session.execute(stmt)
         session.commit()
-    return session.get(models.Painting, id)
+        updated_painting = session.get(models.Painting, id)
+
+    return updated_painting
 
 def search_paintings(
     db: Session,
@@ -482,3 +497,18 @@ def delete_giclee_option(session: Session, painting_id: int, option_attribute_id
 
 def get_pages(session: Session):
     return session.query(models.Page).all()
+
+def validate_aspect_ratio_change(painting_id: int, aspect_ratio: str, session: Session): 
+
+    # get paiting record and look for child giclee record
+    painting = session.get(Painting, painting_id)
+
+    # Check if it has giclee options
+    has_giclee_options = painting.child_giclee is not None and len(painting.child_giclee.options) > 0
+
+    if has_giclee_options:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot change aspect ratio: painting has associated giclee options. These must be deleted first"
+        )
+

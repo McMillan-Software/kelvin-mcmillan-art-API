@@ -26,7 +26,7 @@ class Painting (KelvBase) :
     giclee: bool
     price: float
     info: str
-    aspect_ratio: Optional[float] = None
+    aspect_ratio: Optional[str] = None
     gallery_name: Optional[str] = None
     gallery_link: Optional[str] = None
     image_path: Optional[str] = None
