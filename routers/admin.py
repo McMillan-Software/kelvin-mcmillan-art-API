@@ -110,6 +110,13 @@ def delete_by_id(id: int, session: Session = Depends(get_session)):
 @router.post("/giclee", status_code=status.HTTP_201_CREATED, response_model=list[data_transfer_objects.GicleeOption])
 def add_giclee(giclee: data_transfer_objects.GicleeCreate, session: Session = Depends(get_session)):
     print(f"Adding giclee for paiting with id: {giclee.painting_id}. goa_id(s): {giclee.goa_ids}")
+
+     # check if aspect ratio has been set for the painting - this is required to add gicle options
+    painting = session.query(models.Painting).get(giclee.painting_id)
+    if painting.aspect_ratio is None or painting.aspect_ratio == "":
+        logger.error("Tried to add a giclee option before aspect ratio was set")
+        raise HTTPException(status_code=400, detail="aspect ratio must be set on painting before giclee options can be added")
+
     return service.add_giclee(session, giclee)
 
 
@@ -158,17 +165,19 @@ def get_all_goa(session: Session = Depends(get_session),   aspect_ratio: str | N
     results = query.all()
     return results
 
-
+# get all giclee options
 @router.get("/giclee/options", status_code=status.HTTP_200_OK)
 def get_all_giclee_options(session: Session = Depends(get_session)):
     options = session.query(models.GicleeOption).all()
     return options
 
+# get unique asect ratios
 @router.get("/aspectratios", status_code=status.HTTP_200_OK)
 def get_unique_aspect_ratios(session: Session = Depends(get_session)):
     unique_values = session.query(models.GicleeOptionAttributes.aspect_ratio).distinct().all() 
     return [value[0] for value in unique_values] # check if it really needs to be this way
 
+# get valid giclee options for painting
 @router.get("/giclee/{painting_id}/valid-options", 
             status_code=status.HTTP_200_OK,
             summary="Returns valid giclee and which options have already been added.",
@@ -187,15 +196,12 @@ def get_valid_giclee_options_for_painting(
     
     painting_aspect_ratio = painting.aspect_ratio
     logger.info(f"Painting has an aspect_ratio set to: {painting.aspect_ratio}")
-    
-    # TODO: delete this thiscondtion is almost certainly no londer desireable
-    # # If an aspect_ratio was provided and the paiting aspect_ratio was already set, these values must match or there are no valid options
-    # if aspect_ratio is not None and painting_aspect_ratio is not None:
         
     if painting_aspect_ratio != "" and aspect_ratio != painting_aspect_ratio:
         raise HTTPException(status_code=400, detail=f"Painting aspect ratio has already been set to {painting_aspect_ratio}")
 
-
+    # This allows no aspect ratio to be passed in but options still to be returned if the paintings aspect ratio has been set
+    # this is potnetially confusion side behaviour that is not needed. 
     if aspect_ratio is None:
         aspect_ratio = painting_aspect_ratio
 
@@ -241,8 +247,8 @@ def get_paintings(
         sort_order=sort_order,
     )
 
-#Page
 
+#Page
 @router.get("/pages",status_code=status.HTTP_200_OK,response_model=List[data_transfer_objects.Page])
 def get_pages( db: Session = Depends(get_session)):
     return service.get_pages(db)
