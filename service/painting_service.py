@@ -438,16 +438,12 @@ def get_valid_giclee_options_for_painting(session: Session, painting: models.Pai
 
     # TODO: this requires aspect ratio so the endpoint cannot function without aspect ratio, this needs a rethink. 
    
-   
-    # Also having the aspect ratio set on the paitning appears to not be working 
-    # looks like this is working now...
     
     candidate_options = session.query(models.GicleeOptionAttributes).filter(models.GicleeOptionAttributes.aspect_ratio == aspect_ratio).all()
 
     for opt in candidate_options:
         pprint({k: v for k, v in vars( ).items() if not k.startswith("_")})
 
-     
     giclee = painting.child_giclee
     if giclee: 
         existing_goa_ids = {
@@ -457,7 +453,6 @@ def get_valid_giclee_options_for_painting(session: Session, painting: models.Pai
     else: 
         existing_goa_ids = set()
    
-    
     print(f"existing goa ids: {existing_goa_ids}")
 
     giclee_valid_options = [
@@ -500,8 +495,12 @@ def get_pages(session: Session):
 
 def validate_aspect_ratio_change(painting_id: int, aspect_ratio: str, session: Session): 
 
-    # get paiting record and look for child giclee record
+    # get painting record and look for child giclee record
     painting = session.get(Painting, painting_id)
+
+    # Check if the aspect ratio is actually changing
+    if painting.aspect_ratio == aspect_ratio:
+        return
 
     # Check if it has giclee options
     has_giclee_options = painting.child_giclee is not None and len(painting.child_giclee.options) > 0
@@ -509,6 +508,6 @@ def validate_aspect_ratio_change(painting_id: int, aspect_ratio: str, session: S
     if has_giclee_options:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot change aspect ratio: painting has associated giclee options. These must be deleted first"
+            detail="Cannot change aspect ratio!\n\nPainting has associated giclee options. These must be deleted first."
         )
 
