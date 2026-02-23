@@ -75,10 +75,17 @@ def get_next_page_order(session, page_id: int) -> int:
 
 def get_giclees(session: Session):
 
-    giclee_records = session.query(models.Giclee).options(
-        joinedload(models.Giclee.painting), 
-        joinedload(models.Giclee.options).joinedload(models.GicleeOption.option_attributes) 
-    ).all()
+    giclee_records = (
+        session.query(models.Giclee)
+        .join(models.Giclee.painting) 
+        .filter(models.Painting.giclee == True)  # Only include if flag is True
+        .options(
+            joinedload(models.Giclee.painting), 
+            joinedload(models.Giclee.options)
+            .joinedload(models.GicleeOption.option_attributes) 
+        )
+        .all()
+    )
 
     print(f'number of giclee records: {len(giclee_records)}')
 
@@ -120,38 +127,52 @@ def map_giclee(giclee_model: models.Giclee) -> data_transfer_objects.Giclee:
 
 
 def add_giclee(session: Session, giclee: data_transfer_objects.GicleeCreate):
-    
-    # Get the Painting record
-    print(f"adding giclee for painting with id: {giclee.painting_id}")
+
+     # 1. Get the Painting record and validate
     painting = session.query(models.Painting).get(giclee.painting_id)
-    if painting is None: 
-        print(f"No exisiting painting found with id: {giclee.painting_id}")
+    logger.info(f"Adding giclee(s) for painting - id: {painting.id}, title: {painting.title}")
+    logger.debug(f"Title of parent painting: {painting.title}, width: {painting.width}, height: {painting.height}, aspectRatio: {painting.aspect_ratio}")
+
+    if not painting: 
+        logger.error(f"No exisiting painting found with id: {giclee.painting_id}")
         raise HTTPException(status_code=400, detail=f"No painting found for painting id: {giclee.painting_id}")
-    print(f"Title of parent painting: {painting.title}, width: {painting.width}, height: {painting.height}, aspectRatio: {painting.aspect_ratio}")
 
-    # Check for exisitng giclee record, create if none exists
-    giclee_record = session.query(models.Giclee).filter(models.Giclee.painting_id == giclee.painting_id).first()
-    if giclee_record is None: 
-        print("No existing giclee record found. ")
+    # aspect_ratio must be set to add giclee options
+    if not painting.aspect_ratio:
+        logger.error("Tried to add a giclee option before aspect ratio was set")
+        raise HTTPException(status_code=400, detail="aspect ratio must be set on painting before giclee options can be added")
+
+
+    # 2. Get or create the giclee parent record
+    giclee_record = (
+        session.query(models.Giclee)
+        .filter(models.Giclee.painting_id == painting.id)
+        .first() # TODO: is this required, there will only ever be one record for painting_id
+    )
+
+    if not giclee_record:
+        logger.info(f"No existing giclee record found for paiting_id: {giclee.painting_id}. Creating giclee record")
         giclee_record = create_giclee_record_for_painting_id(session, giclee.painting_id)
-    else: 
-        print(f"exisitng giclee record found: {giclee_record}")
+    
 
+    # 3. Create option(s) records
+    new_options_records = create_giclee_options_from_list(session, painting.id, giclee.goa_ids) 
 
-   # Create GicleeOption records
-    new_options_records = []
-     # option creation method 1: make all for aspect ratio - (not used or well tested)
-    if(giclee.create_all_for_aspect_ratio):
-       print(f"Creating all giclee options for aspect ratio.")
-       new_options_records = create_giclee_options_for_aspect_ratio(session, painting) 
-    # option creation method 2: with a list of GOA ids
-    else: 
-        new_options_records = create_giclee_options_from_list(session, painting.id, giclee.goa_ids) 
+    # 4. ensure giclee flag is set to true
+    # note: sqlalchemy will update this value on the painting automatically - I hope - TODO: confirm this
+    painting.giclee = True
+    
+    session.commit()
 
+    # could also use: 
+    #return [data_transfer_objects.GicleeOption.model_validate(r) for r in new_options_records]
     return [
         data_transfer_objects.GicleeOption.model_validate(option)
         for option in new_options_records
     ]
+   
+
+
 
 # TODO: does not declare returning anything? 
 def get_option_schema_from_option_record(session: Session, record: models.GicleeOption):
@@ -198,7 +219,7 @@ def create_giclee_record_for_painting_id(session: Session, painting_id: int):
 
 
 def create_giclee_options_from_list(session: Session, painting_id: int, goa_ids: list):
-    print("Creating giclees using given list of GOA ids")
+    logger.info("Creating giclees using given list of GOA ids")
 
     # Conditions to consider when adding GicleeOption records: 
     # 1. aspect ratio is the same as exisitng giclees: 
@@ -252,7 +273,6 @@ def create_giclee_options_from_list(session: Session, painting_id: int, goa_ids:
         session.refresh(newGicleeOption)  # refresh from DB (fills id and relationships)
         created_options.append(newGicleeOption)
 
-    session.commit()
     return created_options
 
 
@@ -438,11 +458,7 @@ def get_valid_giclee_options_for_painting(session: Session, painting: models.Pai
 
     # TODO: this requires aspect ratio so the endpoint cannot function without aspect ratio, this needs a rethink. 
    
-    
     candidate_options = session.query(models.GicleeOptionAttributes).filter(models.GicleeOptionAttributes.aspect_ratio == aspect_ratio).all()
-
-    for opt in candidate_options:
-        pprint({k: v for k, v in vars( ).items() if not k.startswith("_")})
 
     giclee = painting.child_giclee
     if giclee: 
@@ -453,7 +469,7 @@ def get_valid_giclee_options_for_painting(session: Session, painting: models.Pai
     else: 
         existing_goa_ids = set()
    
-    print(f"existing goa ids: {existing_goa_ids}")
+    logger.debug(f"existing goa ids: {existing_goa_ids}")
 
     giclee_valid_options = [
        data_transfer_objects.GicleeValidOption(
@@ -489,6 +505,24 @@ def delete_giclee_option(session: Session, painting_id: int, option_attribute_id
         print(f'Unable to delete, unable to find a giclee option for painting_id:{painting_id} and option_attribute_if: {option_attribute_id}')
         raise GicleeOptionNotFound(f'Unable to delete, unable to find a giclee option for painting_id:{painting_id} and option_attribute_if: {option_attribute_id}')
     
+
+    # set giclee flag to false if the last giclee option was deleted
+    remaining_option = (
+        session.query(models.GicleeOption)
+        .filter(models.GicleeOption.painting_id == painting_id)
+        .first()
+    )
+    if not remaining_option:
+        logger.info(f"Detected deletion of final giclee option, setting giclee flag to False")
+        painting = ( 
+            session.query(models.Painting)
+            .filter(models.Painting.id == painting_id)
+            .first()
+        ) 
+        painting.giclee = False
+
+    session.commit()
+   
 
 def get_pages(session: Session):
     return session.query(models.Page).all()
