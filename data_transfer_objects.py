@@ -96,7 +96,6 @@ class GicleeCreate(KelvBase):
     painting_id: int
     page_order: Optional[int]
     goa_ids: Optional[List[int]] # when creating, provide a list of GOA ids
-    create_all_for_aspect_ratio: Optional[bool] # if true, create a giclee option record for each avaialable dim as long as size is amaller then original size
 
     
 
