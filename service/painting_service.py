@@ -27,6 +27,23 @@ def get_painting(session: Session, painting_id: int) -> models.Painting:
     return painting
 
 
+def get_paintings_by_page(session: Session, page: String):
+    print(f"Retrieving paintings by page: {page}")
+    
+    paintings = (
+    session.query(models.Painting)
+    .join(models.Painting.page_items)
+    .join(models.PageItem.page)
+    .filter(models.Page.name == page)
+    .order_by(models.PageItem.page_order.asc())
+    .all()
+    )
+    if not paintings:
+        raise HTTPException(status_code=404, detail=f"No paintings found for given page: {page}")
+    session.close()
+    return paintings
+
+
 def add_painting(session: Session, painting: data_transfer_objects.PaintingCreate) -> models.Painting:
     print(f"adding painting: {painting.title}")
 
