@@ -100,7 +100,7 @@ def delete_by_id(id: int, session: Session = Depends(get_session)):
     return None
 
 # GET - get paintings by search criteria
-@router.get("/paintings",status_code=status.HTTP_200_OK, response_model=List[data_transfer_objects.Painting])
+@router.get("/paintings",status_code=status.HTTP_200_OK, response_model=data_transfer_objects.PaginatedPaintings)
 def get_paintings(
     db: Session = Depends(get_session),
     q: Optional[str] = Query(None, description="Multple string contains"),

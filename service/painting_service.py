@@ -413,7 +413,7 @@ def search_paintings(
             Painting.title.ilike(f"%{q}%"),
             Painting.location.ilike(f"%{q}%"),
             Painting.info.ilike(f"%{q}%"),
-            Painting.galleryName.ilike(f"%{q}%")
+            Painting.gallery_name.ilike(f"%{q}%")
         )
     )
     if type:
@@ -439,6 +439,9 @@ def search_paintings(
     if giclee is not None:
         query = query.filter(Painting.giclee == giclee)
 
+# 1. Get total records BEFORE pagination
+    total_records = query.count()
+
     # Sorting
     sort_column = getattr(Painting, sort_by, None)
     if sort_column:
@@ -447,10 +450,19 @@ def search_paintings(
         else:
             query = query.order_by(sort_column.asc())
 
-    # Pagination
+    # 2. Pagination
     query = query.offset((page - 1) * limit).limit(limit)
+    items = query.all()
 
-    return query.all()    
+    
+
+    # 3. Return the dictionary structure expected by the new DTO
+    return {
+        "total_records": total_records,
+        "page": page,
+        "limit": limit,
+        "items": items
+    }
 
 
 def get_valid_giclee_options_for_painting(session: Session, painting: models.Painting, aspect_ratio: str): 
