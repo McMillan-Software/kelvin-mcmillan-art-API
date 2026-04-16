@@ -134,3 +134,11 @@ class Inquiry(KelvBase):
     name: str
     email: str
     message: str
+
+
+# Paginated Search
+class PaginatedPaintings(KelvBase):
+    total_records: int
+    page: int
+    limit: int
+    items: List[Painting]
