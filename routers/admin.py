@@ -229,8 +229,8 @@ def get_valid_giclee_options_for_painting(
     painting_aspect_ratio = painting.aspect_ratio
     logger.info(f"Painting has an aspect_ratio set to: {painting.aspect_ratio}")
         
-    if painting_aspect_ratio != "" and aspect_ratio != painting_aspect_ratio:
-        raise HTTPException(status_code=400, detail=f"Painting aspect ratio has already been set to {painting_aspect_ratio}")
+    # if painting_aspect_ratio != "" and aspect_ratio != painting_aspect_ratio:
+    #     raise HTTPException(status_code=400, detail=f"Painting aspect ratio has already been set to {painting_aspect_ratio}")
 
     # This allows no aspect ratio to be passed in but options still to be returned if the paintings aspect ratio has been set
     # this is potnetially confusion side behaviour that is not needed. 
