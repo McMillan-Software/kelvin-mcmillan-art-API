@@ -92,6 +92,11 @@ class GicleeOptionAttributeCreate(KelvBase):
     aspect_ratio: float
     price: int
 
+class GicleeOptionAttributeEdit(KelvBase):
+    width: int
+    height: int
+    price: int
+
 class GicleeCreate(KelvBase):
     painting_id: int
     page_order: Optional[int]

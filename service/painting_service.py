@@ -171,6 +171,28 @@ def add_giclee(session: Session, giclee: data_transfer_objects.GicleeCreate):
         for option in new_options_records
     ]
    
+def edit_giclee_option_attribute(session: Session, id: int, width: int, height: int, price: int):
+    
+    update_fields = {}
+    if width is not None:
+        update_fields["width"] = width
+    if height is not None:
+        update_fields["height"] = height
+    if price is not None:
+        update_fields["price"] = price
+
+    if update_fields:
+        stmt = (
+            update(models.GicleeOptionAttributes)
+            .where(models.GicleeOptionAttributes.id == id)
+            .values(**update_fields)
+        )   
+    session.execute(stmt)
+    session.commit()
+    updated_giclee_option_attribute = session.get(models.GicleeOptionAttributes, id)
+
+    return updated_giclee_option_attribute
+
 
 
 
@@ -556,4 +578,4 @@ def validate_aspect_ratio_change(painting_id: int, aspect_ratio: str, session: S
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cannot change aspect ratio!\n\nPainting has associated giclee options. These must be deleted first."
         )
-
+    
