@@ -191,9 +191,15 @@ def add_giclee_dimensions(giclee_dimensions: list[data_transfer_objects.GicleeOp
 def get_all_goa(session: Session = Depends(get_session),   aspect_ratio: str | None = None):
     query = session.query(models.GicleeOptionAttributes)
 
-    if aspect_ratio is not None : 
+    if aspect_ratio is not None: 
         query = query.filter(models.GicleeOptionAttributes.aspect_ratio == aspect_ratio)
-   
+
+    # Sort primarily by aspect ratio, secondarily by price
+    query = query.order_by(
+        models.GicleeOptionAttributes.aspect_ratio.asc(),
+        models.GicleeOptionAttributes.price.asc()
+    )
+        
     results = query.all()
     return results
 
@@ -206,7 +212,7 @@ def get_all_giclee_options(session: Session = Depends(get_session)):
 # GET - get unique asect ratios
 @router.get("/aspectratios", status_code=status.HTTP_200_OK)
 def get_unique_aspect_ratios(session: Session = Depends(get_session)):
-    unique_values = session.query(models.GicleeOptionAttributes.aspect_ratio).distinct().all() 
+    unique_values = session.query(models.GicleeOptionAttributes.aspect_ratio).order_by(models.GicleeOptionAttributes.aspect_ratio.asc()).distinct().all()
     return [value[0] for value in unique_values] # check if it really needs to be this way
 
 # GET - get valid giclee options for painting
@@ -240,7 +246,18 @@ def get_valid_giclee_options_for_painting(
     return service.get_valid_giclee_options_for_painting(session, painting, aspect_ratio)
 
 
-
+#PUT - Update giclee option attribute
+@router.put("/giclee/{giclee_id}", response_model=data_transfer_objects.GicleeOptionAttribute)
+def update_giclee_option(giclee_id: int, giclee_update: data_transfer_objects.GicleeOptionAttributeEdit, session: Session = Depends(get_session)):
+    updated_option = service.edit_giclee_option_attribute(
+        session=session,
+        id=giclee_id,
+        width=giclee_update.width,
+        height=giclee_update.height,
+        price=giclee_update.price
+    )
+    return updated_option
+    
 
 # P A G E 
 
