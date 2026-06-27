@@ -30,9 +30,8 @@ class Painting (KelvBase) :
     gallery_name: Optional[str] = None
     gallery_link: Optional[str] = None
     image_path: Optional[str] = None
-    pages: Optional[List[str]] = None
+    pages: list[int] = []
 
-#Pages
 
 class Page (KelvBase):
     id: int

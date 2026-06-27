@@ -261,7 +261,10 @@ def update_giclee_option(giclee_id: int, giclee_update: data_transfer_objects.Gi
 
 # P A G E 
 
-#Page
-@router.get("/pages",status_code=status.HTTP_200_OK,response_model=List[data_transfer_objects.Page])
-def get_pages( db: Session = Depends(get_session)):
-    return service.get_pages(db)
+@router.post("/painting/{painting_id}/pages/{page_id}")
+def add_category_to_painting(painting_id: int, page_id: int, session: Session = Depends(get_session)):
+    return service.add_category_to_painting(painting_id, page_id, session)
+
+@router.delete("/painting/{painting_id}/pages/{page_id}")
+def remove_category_from_painting(painting_id: int, page_id: int, session: Session = Depends(get_session)):
+    return service.remove_category_from_painting(painting_id, page_id, session)

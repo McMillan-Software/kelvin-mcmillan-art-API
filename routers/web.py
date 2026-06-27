@@ -1,8 +1,12 @@
+from typing import List
+
 from fastapi import HTTPException, Depends, APIRouter
 from database import get_session
 from sqlalchemy.orm import Session
 import service.painting_service as service
 import service.mail_service as mail_service
+from sqlalchemy.orm import joinedload
+from starlette import status
 import models
 import data_transfer_objects
 import logging
@@ -16,7 +20,6 @@ router = APIRouter()
 @router.get("/paintings", response_model=list[data_transfer_objects.Painting])
 def get_all(session: Session = Depends(get_session)):
     paintings = session.query(models.Painting).all()
-    session.close()
     return paintings
 
 
@@ -24,7 +27,6 @@ def get_all(session: Session = Depends(get_session)):
 @router.get("/paintings/originals", response_model=list[data_transfer_objects.Painting])
 def get_originals(session: Session = Depends(get_session)):
     paintings = session.query(models.Painting).filter(models.Painting.sold==False).all()
-    session.close()
     return paintings
 
 
@@ -36,19 +38,16 @@ def get_original_by_id(id: int, session: Session = Depends(get_session)):
     if not painting:
         raise HTTPException(status_code=404, detail=f"no painting found with given id: {id}")
     
-    session.close()
     return painting
 
-# GET 5 PAINTINGS WITH HIGHEST IDs for home page
+
 @router.get("/paintings/home", response_model=list[data_transfer_objects.Painting])
 def get_home_paintings(session: Session = Depends(get_session)):
     paintings = session.query(models.Painting).filter(models.Painting.sold==False).order_by(models.Painting.id.desc()).limit(50).all()
     if not paintings:
         raise HTTPException(status_code=404, detail="No paintings found")
     
-    session.close()
     return paintings
-#    paintings = session.query(models.Painting).order_by(models.Painting.id.desc()).limit(5).all()
 
 
 # GET BY ID
@@ -57,32 +56,42 @@ def get_by_id(id: int, session: Session = Depends(get_session)):
 
     logger.info(f"Getting painting by id: {id}")
 
-    painting = session.query(models.Painting).get(id)
+    painting = (
+        session.query(models.Painting)
+        .options(
+            joinedload(models.Painting.page_items)
+            .joinedload(models.PageItem.page)
+        )
+        .filter(models.Painting.id == id)
+        .first()
+    )
 
     if not painting:
         raise HTTPException(status_code=404, detail=f"painting with id {id} not found")
 
-    session.close()
 
     logger.info(f"Returning painting of id: {id}: {painting.aspect_ratio}")
 
     return painting
 
-
 # GET PORTFOLIO PAGE
-@router.get("/paintings/portfolio/{page}", response_model=list[data_transfer_objects.Painting])
-def get_portfolio_page(page: str, session: Session = Depends(get_session)):
+@router.get("/paintings/portfolio/{page_id}", response_model=list[data_transfer_objects.Painting])
+def get_portfolio_page(page_id: int, session: Session = Depends(get_session)):
     paintings = (
-    session.query(models.Painting)
-    .join(models.Painting.page_items)
-    .join(models.PageItem.page)
-    .filter(models.Page.name == page)
-    .order_by(models.PageItem.page_order.asc())
-    .all()
+        session.query(models.Painting)
+        .options(
+            joinedload(models.Painting.page_items)
+        )
+        .join(models.Painting.page_items)
+        .filter(models.PageItem.page_id == page_id)
+        .order_by(models.PageItem.page_order.asc())
+        .all()
     )
+    
+    
     if not paintings:
-        raise HTTPException(status_code=404, detail=f"No paintings found for given page: {page}")
-    session.close()
+        return []
+        
     return paintings
 
 
@@ -93,7 +102,6 @@ def get_giclees(session: Session = Depends(get_session)):
     print('Getting giclees')
     giclees = service.get_giclees(session)
     print(f"giclees:{giclees}")
-    session.close()
     return giclees
 
 # Customer Inquirie email
@@ -108,3 +116,7 @@ def send_customer_inquiry_email(inquiry: data_transfer_objects.Inquiry):
         status_code=500,
         detail="Failed to send email. Please try again later."
     )
+
+@router.get("/pages",status_code=status.HTTP_200_OK,response_model=List[data_transfer_objects.Page])
+def get_pages( db: Session = Depends(get_session)):
+    return service.get_pages(db)

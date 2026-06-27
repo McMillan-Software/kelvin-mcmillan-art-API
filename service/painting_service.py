@@ -579,3 +579,38 @@ def validate_aspect_ratio_change(painting_id: int, aspect_ratio: str, session: S
             detail="Cannot change aspect ratio!\n\nPainting has associated giclee options. These must be deleted first."
         )
     
+
+# service/painting_service.py
+
+def add_category_to_painting(painting_id: int, page_id: int, session: Session): 
+    # Check if exists
+    existing_item = session.query(models.PageItem).filter_by(
+        painting_id=painting_id, 
+        page_id=page_id
+    ).first()
+    
+    if existing_item:
+        return {"message": "Painting already in this category"}
+        
+    new_page_item = models.PageItem(
+        painting_id=painting_id,
+        page_id=page_id,
+        page_order=get_next_page_order(session, page_id) 
+    )
+    
+    session.add(new_page_item)
+    session.commit()
+    return {"message": "Successfully added"}
+
+def remove_category_from_painting(painting_id: int, page_id: int, session: Session):
+    item_to_remove = session.query(models.PageItem).filter_by(
+        painting_id=painting_id, 
+        page_id=page_id
+    ).first()
+    
+    if item_to_remove:
+        session.delete(item_to_remove)
+        session.commit()
+        return {"message": "Successfully removed"}
+        
+    raise HTTPException(status_code=404, detail="Assignment not found")

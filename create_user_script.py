@@ -26,9 +26,7 @@ def create_user(username: str, password: str):
     except Exception as e: 
         print(f"Error creating user: {e}")
         return False
-    finally:
-        session.close()
-
+    
 
 if __name__ == "__main__":
         if len(sys.argv) != 3:
