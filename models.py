@@ -27,7 +27,14 @@ class Painting(Base):
     # Painting --> Giclee, 1:1
     child_giclee = relationship("Giclee", back_populates="painting", uselist=False)
 
-    page_items: Mapped[List["PageItem"]] = relationship(back_populates="painting")
+    page_items: Mapped[List["PageItem"]] = relationship(
+        back_populates="painting", 
+        lazy="joined" 
+    )
+
+    @property
+    def pages(self) -> list[int]:
+        return [item.page_id for item in self.page_items]
 
 
 

@@ -30,7 +30,6 @@ def add_user(session: Session, user: data_transfer_objects.User) -> models.User:
     session.add(newUser)
     print('new user added')
     session.commit()
-    session.close()
     return newUser
 
 def get_user(session: Session, username: string) -> models.User:
