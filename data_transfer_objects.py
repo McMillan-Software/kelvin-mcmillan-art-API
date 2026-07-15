@@ -22,6 +22,7 @@ class Painting (KelvBase) :
     width: int
     height: int
     sold: bool
+    artist_collection: bool
     framed: Optional[bool] = None
     giclee: bool
     price: float
@@ -53,6 +54,7 @@ class PaintingCreate (KelvBase) :
     width: int
     height: int
     sold: bool
+    artist_collection: bool
     framed: bool
     price: Optional[float] = None
     info: str

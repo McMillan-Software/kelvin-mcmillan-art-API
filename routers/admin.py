@@ -74,6 +74,7 @@ def edit_painting(id: int, painting_update: data_transfer_objects.Painting, sess
         width=painting_update.width,
         height=painting_update.height,
         sold=painting_update.sold,
+        artist_collection=painting_update.artist_collection,
         framed=painting_update.framed,
         price=painting_update.price,
         info=painting_update.info,
@@ -185,6 +186,13 @@ def add_giclee_dimensions(giclee_dimensions: list[data_transfer_objects.GicleeOp
         session.refresh(newDim)
         newDims.append(newDim)
     return newDims
+
+
+# DELETE - Remove GicleeOptionAttribute 
+@router.delete("/giclee/attribute/{option_attribute_id}", status_code=status.HTTP_200_OK)
+def delete_giclee_option_attribute(option_attribute_id: int, session: Session = Depends(get_session)):
+    return service.delete_giclee_option_attribute(session, option_attribute_id)
+
 
 # GET - get all GicleeAttributeOptions for aspect ratio, or if no aspect ratio provided, get all.
 @router.get("/giclee/dimensions", status_code=status.HTTP_200_OK, response_model=list[data_transfer_objects.GicleeOptionAttribute])
