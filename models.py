@@ -15,6 +15,7 @@ class Painting(Base):
     width = Column(Integer, nullable=False)
     height = Column(Integer, nullable=False)
     sold = Column(Boolean, nullable=False)
+    artist_collection = Column(Boolean, nullable=False)
     framed = Column(Boolean, default=False)
     giclee = Column(Boolean, default=False)
     price = Column(Float)
@@ -100,7 +101,6 @@ class GicleeOptionAttributes(Base):
 
     # GicleeOptionAttributes --> GicleeOption, 1:N
     children_options = relationship("GicleeOption", back_populates="option_attributes")
-    # NOTE: probs don't need this here. In no case will an instances of this class hold reference to a GicleeOption, it's 1 way only. Consider this for other cases. 
 
 
 class User(Base):

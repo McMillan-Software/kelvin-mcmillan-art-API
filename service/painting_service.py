@@ -4,14 +4,14 @@ import data_transfer_objects
 from sqlalchemy import Date
 from sqlalchemy.orm import Session
 from sqlalchemy import update
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, contains_eager
 from fastapi import HTTPException, status
 
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_
 from sqlalchemy import func
 from typing import List, Optional
-from models import GicleeOption, Painting
+from models import GicleeOption, Painting, GicleeOptionAttributes
 from pprint import pprint
 from exceptions import GicleeOptionNotFound
 import logging
@@ -36,6 +36,7 @@ def add_painting(session: Session, painting: data_transfer_objects.PaintingCreat
         width = painting.width,
         height = painting.height,
         sold = painting.sold,
+        artist_collection = painting.artist_collection,
         framed = painting.framed,
         price = painting.price,
         info = painting.info,
@@ -76,16 +77,24 @@ def get_next_page_order(session, page_id: int) -> int:
 def get_giclees(session: Session):
 
     giclee_records = (
-        session.query(models.Giclee)
-        .join(models.Giclee.painting) 
-        .filter(models.Painting.giclee == True)  # Only include if flag is True
-        .options(
-            joinedload(models.Giclee.painting), 
-            joinedload(models.Giclee.options)
-            .joinedload(models.GicleeOption.option_attributes) 
+            session.query(models.Giclee)
+            .join(models.Giclee.painting)
+            
+            .join(models.Giclee.options)
+            .join(models.GicleeOption.option_attributes)
+            
+            .order_by(
+                models.Giclee.painting_id,
+                models.GicleeOptionAttributes.price.asc()
+            )
+            
+            .options(
+                joinedload(models.Giclee.painting),
+                contains_eager(models.Giclee.options)
+                .contains_eager(models.GicleeOption.option_attributes)
+            )
+            .all()
         )
-        .all()
-    )
 
     print(f'number of giclee records: {len(giclee_records)}')
 
@@ -353,6 +362,7 @@ def edit_painting(
     width: Optional[str] = None,
     height: Optional[str] = None,
     sold: Optional[bool] = None,
+    artist_collection: Optional[bool] = None,
     framed: Optional[bool] = None,
     price: Optional[float] = None,
     info: Optional[str] = None,
@@ -383,6 +393,8 @@ def edit_painting(
         update_fields["height"] = height
     if sold is not None:
         update_fields["sold"] = sold
+    if artist_collection is not None:
+        update_fields["artist_collection"] = artist_collection
     if framed is not None:
         update_fields["framed"] = framed
     if price is not None:
@@ -521,8 +533,40 @@ def get_valid_giclee_options_for_painting(session: Session, painting: models.Pai
         valid_options=giclee_valid_options
     )
 
+def delete_giclee_option_attribute(session: Session, option_attribute_id: int):
+    attribute = session.get(GicleeOptionAttributes, option_attribute_id)
 
-def delete_giclee_option(session: Session, painting_id: int, option_attribute_id: int): 
+    if attribute is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Giclee option attribute not found"
+        )
+
+    # Get all giclee options using this attribute
+    options = (
+        session.query(GicleeOption)
+        .filter(
+            GicleeOption.option_attribute_id == option_attribute_id
+        )
+        .all()
+    )
+
+    # Delete each option using existing business logic
+    for option in options:
+        delete_giclee_option(
+            session,
+            option.painting_id,
+            option.option_attribute_id,
+            False
+        )
+
+    # Delete the attribute itself
+    session.delete(attribute)
+
+    session.commit()
+
+
+def delete_giclee_option(session: Session, painting_id: int, option_attribute_id: int, commit: bool = True):
 
     option = (
         session.query(GicleeOption).filter(
@@ -555,7 +599,8 @@ def delete_giclee_option(session: Session, painting_id: int, option_attribute_id
         ) 
         painting.giclee = False
 
-    session.commit()
+    if commit:
+        session.commit()
    
 
 def get_pages(session: Session):
