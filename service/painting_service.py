@@ -101,7 +101,6 @@ def get_giclees(session: Session):
     return [map_giclee(giclee) for giclee in giclee_records]
 
 def map_giclee(giclee_model: models.Giclee) -> data_transfer_objects.Giclee:
-    #TODO: find a way to not explode if for some reason the related painting record can not be found.
     return data_transfer_objects.Giclee(
         painting_id=giclee_model.painting_id,
         page_order=giclee_model.page_order,
@@ -112,6 +111,7 @@ def map_giclee(giclee_model: models.Giclee) -> data_transfer_objects.Giclee:
             width=giclee_model.painting.width,
             height=giclee_model.painting.height,
             sold=giclee_model.painting.sold,
+            artist_collection=giclee_model.painting.artist_collection,
             giclee=giclee_model.painting.giclee,
             price=giclee_model.painting.price,
             info=giclee_model.painting.info,
