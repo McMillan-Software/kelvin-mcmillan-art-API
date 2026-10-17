@@ -70,6 +70,9 @@ class Giclee(Base):
     # Giclee --> GicleeOption, 1:N
     options = relationship("GicleeOption", back_populates="parent_giclee_painting", lazy="joined")
 
+    # Giclee --> GicleeCollectionItem, 1:N (lazy, Giclee already eager loads painting and options)
+    collection_items = relationship("GicleeCollectionItem", back_populates="giclee")
+
 
 
 class GicleeOption(Base):
@@ -101,6 +104,31 @@ class GicleeOptionAttributes(Base):
 
     # GicleeOptionAttributes --> GicleeOption, 1:N
     children_options = relationship("GicleeOption", back_populates="option_attributes")
+
+
+class GicleeCollection(Base):
+    __tablename__ = 'giclee_collections'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(String(256), nullable=False)
+    description: Mapped[str] = mapped_column(String, nullable=True)
+    order_number: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+    # GicleeCollection <--> Giclee, N:M via GicleeCollectionItem
+    items: Mapped[List["GicleeCollectionItem"]] = relationship(
+        back_populates="collection",
+        cascade="all, delete-orphan",
+        order_by="GicleeCollectionItem.item_order"
+    )
+
+
+class GicleeCollectionItem(Base):
+    __tablename__ = 'giclee_collection_items'
+    collection_id: Mapped[int] = mapped_column(ForeignKey("giclee_collections.id"), primary_key=True)
+    painting_id: Mapped[int] = mapped_column(ForeignKey("giclees.painting_id"), primary_key=True)
+    item_order: Mapped[int] = mapped_column(Integer)
+
+    collection: Mapped["GicleeCollection"] = relationship(back_populates="items")
+    giclee: Mapped["Giclee"] = relationship(back_populates="collection_items")
 
 
 class User(Base):

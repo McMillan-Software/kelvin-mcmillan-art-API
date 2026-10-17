@@ -107,6 +107,7 @@ def map_giclee(giclee_model: models.Giclee) -> data_transfer_objects.Giclee:
         painting= data_transfer_objects.Painting(
             id=giclee_model.painting.id,
             title=giclee_model.painting.title,
+            location=giclee_model.painting.location,
             type=giclee_model.painting.type,
             width=giclee_model.painting.width,
             height=giclee_model.painting.height,
@@ -139,8 +140,6 @@ def add_giclee(session: Session, giclee: data_transfer_objects.GicleeCreate):
 
      # 1. Get the Painting record and validate
     painting = session.query(models.Painting).get(giclee.painting_id)
-    logger.info(f"Adding giclee(s) for painting - id: {painting.id}, title: {painting.title}")
-    logger.debug(f"Title of parent painting: {painting.title}, width: {painting.width}, height: {painting.height}, aspectRatio: {painting.aspect_ratio}")
 
     if not painting: 
         logger.error(f"No exisiting painting found with id: {giclee.painting_id}")
@@ -156,25 +155,21 @@ def add_giclee(session: Session, giclee: data_transfer_objects.GicleeCreate):
     giclee_record = (
         session.query(models.Giclee)
         .filter(models.Giclee.painting_id == painting.id)
-        .first() # TODO: is this required, there will only ever be one record for painting_id
+        .first() 
     )
 
     if not giclee_record:
         logger.info(f"No existing giclee record found for paiting_id: {giclee.painting_id}. Creating giclee record")
         giclee_record = create_giclee_record_for_painting_id(session, giclee.painting_id)
     
-
     # 3. Create option(s) records
     new_options_records = create_giclee_options_from_list(session, painting.id, giclee.goa_ids) 
 
     # 4. ensure giclee flag is set to true
-    # note: sqlalchemy will update this value on the painting automatically - I hope - TODO: confirm this
     painting.giclee = True
     
     session.commit()
 
-    # could also use: 
-    #return [data_transfer_objects.GicleeOption.model_validate(r) for r in new_options_records]
     return [
         data_transfer_objects.GicleeOption.model_validate(option)
         for option in new_options_records
@@ -252,10 +247,6 @@ def create_giclee_record_for_painting_id(session: Session, painting_id: int):
 def create_giclee_options_from_list(session: Session, painting_id: int, goa_ids: list):
     logger.info("Creating giclees using given list of GOA ids")
 
-    # Conditions to consider when adding GicleeOption records: 
-    # 1. aspect ratio is the same as exisitng giclees: 
-    # 2. there is not already an exisiting gicle option of the same dimensions - handled by db config UniqueConstraint
-
     # get an exisiting GicleeOption for this painting if it exists
     first_giclee_option = session.query(models.GicleeOption).filter(
         models.GicleeOption.painting_id == painting_id
@@ -290,8 +281,6 @@ def create_giclee_options_from_list(session: Session, painting_id: int, goa_ids:
             raise HTTPException(status_code=400, detail="Painting already has Giclee option with the same dimensions.")
 
             
-        #TODO: Better method: instead enforce that the paintings aspect ratio is set and then assert based off that field.
-
         print(f"Adding new giclee options for painting with id: {painting_id}, width: {goa_record.width}")
         newGicleeOption = models.GicleeOption(
             option_attribute_id=goa_id,
@@ -590,6 +579,7 @@ def delete_giclee_option(session: Session, painting_id: int, option_attribute_id
         .filter(models.GicleeOption.painting_id == painting_id)
         .first()
     )
+
     if not remaining_option:
         logger.info(f"Detected deletion of final giclee option, setting giclee flag to False")
         painting = ( 

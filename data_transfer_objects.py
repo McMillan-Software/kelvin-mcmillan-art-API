@@ -1,6 +1,6 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, AfterValidator
 from pydantic.alias_generators import to_camel
-from typing import Optional, List
+from typing import Optional, List, Annotated
 from datetime import date
 
 class KelvBase(BaseModel):
@@ -12,11 +12,14 @@ class KelvBase(BaseModel):
         populate_by_name=True
     )
 
+# admin form input often arrives with trailing whitespace, strip it before it reaches the db
+TrimmedStr = Annotated[str, AfterValidator(str.rstrip)]
+
 # for returning a basic painting object
 class Painting (KelvBase) : 
     id: int
-    title: str
-    location: Optional[str] = None
+    title: TrimmedStr
+    location: Optional[TrimmedStr] = None
     type: str
     creation_date: Optional[date] = None
     width: int
@@ -28,8 +31,8 @@ class Painting (KelvBase) :
     price: float
     info: str
     aspect_ratio: Optional[str] = None
-    gallery_name: Optional[str] = None
-    gallery_link: Optional[str] = None
+    gallery_name: Optional[TrimmedStr] = None
+    gallery_link: Optional[TrimmedStr] = None
     image_path: Optional[str] = None
     pages: list[int] = []
 
@@ -47,8 +50,8 @@ class PageItem (KelvBase):
 
 # includes fields exclusiveto orginals
 class PaintingCreate (KelvBase) : 
-    title: str
-    location: Optional[str] = None
+    title: TrimmedStr
+    location: Optional[TrimmedStr] = None
     creation_date: Optional[date] = None
     type: str
     width: int
@@ -58,8 +61,8 @@ class PaintingCreate (KelvBase) :
     framed: bool
     price: Optional[float] = None
     info: str
-    gallery_link: Optional[str] = None
-    gallery_name: Optional[str] = None
+    gallery_link: Optional[TrimmedStr] = None
+    gallery_name: Optional[TrimmedStr] = None
     pages: Optional[List[int]] = None
 
 
@@ -115,6 +118,36 @@ class GicleeValidOptions(KelvBase):
     aspect_ratio: Optional[str]
     valid_options: List[GicleeValidOption]
 
+
+
+
+# GICLEE COLLECTIONS
+
+class GicleeCollectionCreate(KelvBase):
+    title: str
+    description: Optional[str] = None
+    order_number: int = 0
+
+# all fields optional, only the fields provided are updated
+class GicleeCollectionUpdate(KelvBase):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    order_number: Optional[int] = None
+
+class GicleeCollection(KelvBase):
+    id: int
+    title: str
+    description: Optional[str] = None
+    order_number: int
+    giclees: List[Giclee]
+
+class GicleeCollectionSummary(KelvBase):
+    id: int
+    title: str
+
+class GicleeDetail(KelvBase):
+    giclee: Giclee
+    collections: List[GicleeCollectionSummary]
 
 
 

@@ -5,6 +5,7 @@ from database import get_session
 from sqlalchemy.orm import Session
 import service.painting_service as service
 import service.mail_service as mail_service
+import service.giclee_collection_service as giclee_collection_service
 from sqlalchemy.orm import joinedload
 from starlette import status
 import models
@@ -103,6 +104,16 @@ def get_giclees(session: Session = Depends(get_session)):
     giclees = service.get_giclees(session)
     print(f"giclees:{giclees}")
     return giclees
+
+# GET GICLEE COLLECTIONS
+@router.get("/giclee-collections", response_model=list[data_transfer_objects.GicleeCollection])
+def get_giclee_collections(session: Session = Depends(get_session)):
+    return giclee_collection_service.list_collections(session, public=True)
+
+# GET GICLEE DETAIL FOR A PAINTING
+@router.get("/giclees/{painting_id}", response_model=data_transfer_objects.GicleeDetail)
+def get_giclee_detail(painting_id: int, session: Session = Depends(get_session)):
+    return giclee_collection_service.get_giclee_detail(session, painting_id)
 
 # Customer Inquirie email
 @router.post("/painting/inquiry", response_model=None, status_code=200)
