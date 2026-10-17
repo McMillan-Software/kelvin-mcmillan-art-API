@@ -118,6 +118,36 @@ class GicleeValidOptions(KelvBase):
 
 
 
+# GICLEE COLLECTIONS
+
+class GicleeCollectionCreate(KelvBase):
+    title: str
+    description: Optional[str] = None
+    order_number: int = 0
+
+# all fields optional, only the fields provided are updated
+class GicleeCollectionUpdate(KelvBase):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    order_number: Optional[int] = None
+
+class GicleeCollection(KelvBase):
+    id: int
+    title: str
+    description: Optional[str] = None
+    order_number: int
+    giclees: List[Giclee]
+
+class GicleeCollectionSummary(KelvBase):
+    id: int
+    title: str
+
+class GicleeDetail(KelvBase):
+    giclee: Giclee
+    collections: List[GicleeCollectionSummary]
+
+
+
 # Authentication
 
 #Token for authentication

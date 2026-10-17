@@ -15,6 +15,7 @@ import data_transfer_objects
 import service.painting_service as service
 import service.user_service as user_service
 import service.image_service as image_service
+import service.giclee_collection_service as giclee_collection_service
 import logging
 from models import User
 
@@ -93,6 +94,7 @@ def delete_by_id(id: int, session: Session = Depends(get_session)):
     painting = session.query(models.Painting).get(id)
 
     if painting:
+        giclee_collection_service.remove_painting_from_collections(session, id)
         session.delete(painting)
         session.commit()
     else:
@@ -276,3 +278,35 @@ def add_category_to_painting(painting_id: int, page_id: int, session: Session = 
 @router.delete("/painting/{painting_id}/pages/{page_id}")
 def remove_category_from_painting(painting_id: int, page_id: int, session: Session = Depends(get_session)):
     return service.remove_category_from_painting(painting_id, page_id, session)
+
+
+# G I C L E E   C O L L E C T I O N S
+
+@router.get("/giclee-collections", response_model=list[data_transfer_objects.GicleeCollection])
+def get_giclee_collections(session: Session = Depends(get_session)):
+    return giclee_collection_service.list_collections(session, public=False)
+
+@router.get("/giclee-collections/{collection_id}", response_model=data_transfer_objects.GicleeCollection)
+def get_giclee_collection(collection_id: int, session: Session = Depends(get_session)):
+    return giclee_collection_service.get_collection(session, collection_id)
+
+@router.post("/giclee-collections", status_code=status.HTTP_201_CREATED, response_model=data_transfer_objects.GicleeCollection)
+def create_giclee_collection(collection: data_transfer_objects.GicleeCollectionCreate, session: Session = Depends(get_session)):
+    return giclee_collection_service.create_collection(session, collection)
+
+@router.put("/giclee-collections/{collection_id}", response_model=data_transfer_objects.GicleeCollection)
+def update_giclee_collection(collection_id: int, collection_update: data_transfer_objects.GicleeCollectionUpdate, session: Session = Depends(get_session)):
+    return giclee_collection_service.update_collection(session, collection_id, collection_update)
+
+@router.delete("/giclee-collections/{collection_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_giclee_collection(collection_id: int, session: Session = Depends(get_session)):
+    giclee_collection_service.delete_collection(session, collection_id)
+    return None
+
+@router.post("/giclee-collections/{collection_id}/giclees/{painting_id}")
+def add_giclee_to_collection(collection_id: int, painting_id: int, session: Session = Depends(get_session)):
+    return giclee_collection_service.add_giclee_to_collection(session, collection_id, painting_id)
+
+@router.delete("/giclee-collections/{collection_id}/giclees/{painting_id}")
+def remove_giclee_from_collection(collection_id: int, painting_id: int, session: Session = Depends(get_session)):
+    return giclee_collection_service.remove_giclee_from_collection(session, collection_id, painting_id)
